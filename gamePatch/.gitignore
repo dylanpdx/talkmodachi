@@ -1,0 +1,9 @@
+bak/
+build/
+
+*.d
+*.o
+*.x
+*.elf
+*.bin
+*.sym

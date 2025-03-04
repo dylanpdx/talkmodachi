@@ -1,0 +1,35 @@
+mainloop:
+  type: branch
+  addr: 0x001071e4
+  func: mainLoopF
+  link: false
+
+getTtsData:
+  type: branch
+  addr: 0x00191860
+  func: getTtsData
+  link: true
+
+getAudioResult:
+  type: branch
+  addr: 0x00163c1c
+  func: audioDataGetAsm
+  link: true
+
+getAudioResult2:
+  type: branch
+  addr: 0x00163c2c
+  func: audioDataGetAsm
+  link: true
+
+getAudioResult3:
+  type: branch
+  addr: 0x001834ac
+  func: audioDataGetAsm
+  link: true
+
+getAudioResult4:
+  type: branch
+  addr: 0x001834bc
+  func: audioDataGetAsm
+  link: true
