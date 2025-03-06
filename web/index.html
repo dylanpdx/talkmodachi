@@ -427,7 +427,7 @@
             display: flex;
             justify-content: space-between;
             
-            a {
+            a:not(#lensdeer) {
                 font-size: 2em;
                 background: #f60;
                 border: 6px solid;
@@ -440,6 +440,38 @@
                 text-decoration: none;
                 transition: 0.1s all;
             }
+            
+            #lensdeer {
+                width: 16px;
+                height: 16px;
+                position: absolute;
+                top: -24px;
+                right: 0px;
+                opacity: .5;
+                image-rendering: pixelated;
+                transition: .2s all;
+                white-space: nowrap;
+                text-align: right;
+                filter: grayscale(1);
+                margin-right: 4px;
+                text-decoration: underline dotted;
+                font-size: 16px;
+                color: #000;
+                display: flex;
+                gap: .5ch;
+                
+                img {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+            
+                #lensdeer:hover{
+                    right: calc(16px + 12ch);
+                    opacity: 1;
+                    background: transparent;
+                    filter: none;
+                }
             
             a:hover {
                 background: #0ff;
@@ -533,6 +565,10 @@
     
     <footer>
         <a href="https://github.com/dylanpdx/talkmodachi">Source</a>
+        <a id="lensdeer" href="https://lensdeer.neocities.org">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAbJJREFUOI2Nkz1IHFEUhb+RxUBwLZYlLFql0bAgSvxpd6ezkLAQELHLIoqtTCMEISATCEGUFCIIdoNNICOBSJrZkUUwzEBIQFYbEdZEyGBjmiXFTbG8yZud+HOaB4d7zjv33vcM7oCZRwC8CMPMIz8eZAHoKQwQhqGRGezPik50CgHKY0CArFvjTL9r0FMYoFQqAUhGiRXRex7+E2koj8GjpyWgwe/LU3yfdgIgJnrPw5SwE7WdBaaWvfjCrpOLayNw39xLDJArVjh0N/B9nzAMDUP1ex8xwNLqJgDPJhfxItot6NhuPGbuyRm1INl/LWifay8XE/UpA2gXO44FwMT8ewjObkzU9T9SiXPFCgD7X+s4jpVIlTDwIoyRPhvne5aHfyLKL7b4spuLi/ZXDgBYt8bjhF6EkXAy88h1sCmD/VlpNevSatbFrdriVm1pNevy87MlZh55NYnojyyjxGoL344+xaYTM1fkihWujj8wO/s2HqZ+e2qNak06ugtDsUln9Fvfwd6v0RSn/5fEENWE1TnSZ1PbmgPg0N3g42uTleHnuFVbUga6iW6mxEBiKzr+AryyuSBb8rXIAAAAAElFTkSuQmCC">
+            UI by lensdeer
+        </a>
         <a href="https://ko-fi.com/dylanpdx">Donate</a>
     </footer>
 
