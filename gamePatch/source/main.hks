@@ -1,6 +1,6 @@
 mainloop:
   type: branch
-  addr: 0x001071e4
+  addr: 0x00104c84
   func: mainLoopF
   link: false
 
