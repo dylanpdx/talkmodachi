@@ -1,0 +1,485 @@
+body {
+	background: linear-gradient(#fe4, #ffb);
+	display: grid;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	height: 100vh;
+	margin: 0;
+	padding: 0;
+	perspective: 1000px;
+	overflow: hidden;
+	width: 100vw;
+
+	header {
+		background:
+			conic-gradient(
+				#fd7 25%,
+				#fc4 25%,
+				#fc4 50%,
+				#fd7 50%,
+				#fd7 75%,
+				#fc4 75%
+			);
+		background-size: 10px 10px;
+		border-radius: calc(1em + 5px) / 50%;
+		box-shadow:
+			inset 0 3px 0 2px #ffb,
+			inset 0 -3px 0 2px #fb3;
+		height: fit-content;
+		inset: 5px 5px auto;
+		padding: 5px 0;
+		position: fixed;
+
+		h1 {
+			font-weight: normal;
+			margin: 0;
+			text-align: center;
+		}
+	}
+
+	main {
+		align-self: center;
+		background: #ffaa;
+		border-radius: 8px;
+		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		justify-self: center;
+		max-width: 50vw;
+		padding: 20px;
+		z-index: 3;
+
+		.pill {
+			background: #ffd;
+			border-radius: 1.5ch / 50%;
+			box-shadow: 0 2px 0 0 #dd9;
+			font-weight: normal;
+			height: fit-content;
+			margin: 0 auto;
+			padding: 5px 1ch;
+			text-align: center;
+			width: 50%;
+		}
+
+		.textBox {
+			--background: #fff;
+			--border: #fc7;
+			--shadow: #fed;
+			background: var(--background);
+			border: 2px solid var(--border);
+			border-radius: 1ch;
+			box-shadow:
+				inset 0 3px var(--shadow),
+				inset 3px 0 var(--shadow),
+				inset -3px 0 var(--shadow);
+			font-size: 16px;
+			padding: .5em;
+			transition: .1s all;
+		}
+		
+			textarea.textBox {
+				max-width: 80ch;
+				min-height: 7em;
+				resize: vertical;
+				width: calc(100% - 20px);
+			}
+
+				textarea.textBox:where(:focus, :hover) {
+					--background: #eff;
+					--border: #088;
+					--shadow: #cff;
+				}
+
+				textarea.textBox:focus {
+					--background: #7dd;
+					outline: 0;
+				}
+
+		.buttonContainer {
+			display: flex;
+			gap: 10px;
+			justify-content: center;
+			width: 100%;
+		}
+
+		button,
+		.button {
+			--background: #f60;
+			--topborder: #d50;
+			--reflection: var(--topborder);
+			--midborder: #830;
+			--botborder: #620;
+			background: var(--background);
+			border: 4px solid;
+			border-color:
+				var(--topborder)
+				var(--midborder)
+				var(--botborder);
+			border-radius: 10px;
+			box-shadow:
+				inset 0 1px 0 0 var(--midborder),
+				inset 0 .6em 0 0 var(--reflection);
+			font-size: larger;
+			width: fit-content;
+			padding: .6em 2ch .3em;
+			text-align: center;
+			text-shadow: 2px 1px 0 var(--reflection);
+			transition: .1s all;
+			
+			span {
+				display: block;
+				font-size: 2em;
+				position: absolute;
+				text-align: center;
+				width: 100%;
+			}
+		}
+
+			:where(button, .button).yellow:not(:has(:checked)) {
+				--background: #fc0;
+				--topborder: #da0;
+				--reflection: #fd3;
+				--midborder: #a80;
+				--botborder: #640;
+				text-shadow: 2px 1px 0 #ffa;
+			}
+
+			/* TODO: I clearly fucked up specificity here but fuck it we ball */
+			:where(button, .button, .button.yellow):not(:has(:checked)):hover {
+				--topborder: #aff;
+				--midborder: #6dd;
+				--botborder: #088;
+				--reflection: var(--topborder);
+				--background: #9ee;
+				cursor: pointer;
+			}
+
+			button:disabled {
+				--background: #ccc;
+				--topborder: #eee;
+				--reflection: #fff;
+				--midborder: #999;
+				--botborder: #666;
+				color: #000;
+				cursor: not-allowed;
+			}
+
+		#input,
+		#output:not([hidden]) {
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+
+			#controlsContainer:not([hidden]) {
+				display: grid;
+				gap: 20px;
+				grid-template-columns: 1fr 1fr;
+
+				h2 { grid-column: 1 / 3;}
+
+				label.control {
+					display: flex;
+					flex-direction: column;
+					gap: 15px;
+
+				input[type="range"] {
+					appearance: none;
+					align-self: center;
+					background:
+						linear-gradient(
+							transparent calc(50% - 2px),
+							#222 calc(50% - 2px),
+							#555 calc(50% + 2px),
+							transparent calc(50% + 2px)
+						),
+						repeating-linear-gradient(
+							90deg,
+							#555 0px 4px,
+							transparent 4px 16px),
+						repeating-linear-gradient(
+							90deg,
+							#aaa 0px 4px,
+							transparent 4px 16px);
+					background-repeat:
+						repeat,
+						no-repeat;
+					background-size:
+						100% 100%,
+						100% 50%,
+						100% 100%;
+					height: 1em;
+					outline: none;
+					width: 90%;
+				}
+
+					input[type=range]::-moz-range-thumb,
+					input[type=range]::-webkit-slider-thumb {
+						--top: #fdc;
+						--border: #c60;
+						--bg: #f60;
+						appearance: none;
+						background: var(--bg);
+						border: 3px solid;
+						border-color: var(--top) var(--border) var(--border);
+						border-radius: 4px;
+						box-shadow: 0 0 0 2px #000;
+						cursor: grab;
+						width: 6px;
+						height: 200%;
+					}
+
+						input[type=range]:active::-moz-range-thumb,
+						input[type=range]:active::-webkit-slider-thumb {
+							--top: #cff;
+							--border: #088;
+							--bg: #0ff;
+							cursor: move;
+						}
+				}
+
+				#intonation {
+					display: flex;
+					justify-content: center;
+					gap: 10px;
+
+					label {
+						cursor: pointer;
+						height: 1.5em;
+						padding: 0;
+						position: relative;
+						width: 1.5em;
+
+						span { line-height: 0.7;}
+
+						input[type=radio] {
+							height: 0;
+							opacity: 0;
+							position: absolute;
+							width: 0;
+						}
+					}
+				}
+			}
+
+			#status {
+				--border: #ccc;
+				--shadow: #eee;
+				color: #555;
+				margin: auto;
+				padding: .2em;
+				text-align: center;
+				width: 90%;
+			}
+
+			#audioContainer {
+				#playButton {
+					height: 40px;
+					padding: 0;
+					position: relative;
+					width: 2.5em;
+					
+					span { line-height: 0;}
+				}
+
+				#downloadButton{
+					height: 32px;
+					line-height: 1.7;
+					padding: 0 1ch;
+				}
+			}
+		}
+	}
+	
+	footer {
+		display: flex;
+		inset: auto auto -6px 0;
+		justify-content: space-between;
+		position: fixed;
+		width: 100%;
+		
+		a.button {
+			background: #f60;
+			border: 6px solid;
+			border-color: #fdc #c60 transparent #c60;
+			border-radius: 8px 8px 0 0;
+			box-shadow: 0 0 0 4px #000;
+			color: #000;
+			font-size: 2em;
+			margin: 0 4px;
+			padding: 0.5ch 2ch 0;
+			text-decoration: none;
+			transition: 0.1s all;
+		}
+
+		a.button:hover {
+			background: #0ff;
+			border-color: #cff #088 transparent #088;
+		}
+
+		/* TODO: This is a mess lol */
+		#lensdeer {
+			color: #000;
+			display: flex;
+			filter: grayscale(1);
+			font-size: 16px;
+			gap: .5ch;
+			height: 16px;
+			image-rendering: pixelated;
+			inset: -24px 0 auto auto;
+			margin-right: 4px;
+			opacity: .5;
+			position: absolute;
+			text-align: right;
+			text-decoration: underline dotted;
+			transition: .2s all;
+			white-space: nowrap;
+			width: 16px;
+			
+			img { width: 16px;}
+		}
+
+			#lensdeer:hover{
+				background: transparent;
+				filter: none;
+				opacity: 1;
+				right: calc(16px + 12ch);
+			}
+	}
+}
+
+	body::before,
+	body::after {
+		background-size:
+			100% 100%,
+			250px 250px,
+			250px 250px,
+			250px 250px,
+			250px 250px,
+			250px 250px,
+			250px 250px,
+			100% 100%;
+		inset: auto auto 0 -50%;
+		perspective: inherit;
+		position: fixed;
+		width: 200%;
+	}
+
+	/* Floor */
+	body::after {
+		background:
+			radial-gradient(transparent, #ff9 75%),
+			radial-gradient(
+				circle at 75% 25%,
+				#ff8 20%,
+				transparent 20%
+			),
+			radial-gradient(
+				circle at 0% 75%,
+				#ff8c 15%,
+				transparent 15%
+			),
+			radial-gradient(
+				circle at 50% 75%,
+				#ff8c 20%,
+				transparent 15%
+			),
+			radial-gradient(
+				circle at 100% 75%,
+				#ff8c 15%,
+				transparent 15%
+			),
+			radial-gradient(
+				circle at 25% 25%,
+				#ff8 20%,
+				#fd2 20% 25%,
+				transparent 25%
+			),
+			radial-gradient(
+				circle at 75% 75%,
+				#fd2 20%,
+				transparent 20%
+			),
+			transparent;
+		content: '';
+		height: 75%;
+		transform: rotateX(90deg);
+		transform-origin: 50% 100%;
+		width: 200%;
+		z-index: 0;
+	}
+
+	/* Background */
+	body::before {
+		animation: background 240s infinite linear;
+		background:
+			linear-gradient(
+				#fe4,
+				transparent 30% 60%,
+				#ff8
+			),
+			radial-gradient(
+				circle at 75% 25%,
+				#ff8 20%,
+				transparent 20%
+			),
+			radial-gradient(
+				circle at 0% 75%,
+				#ff8c 15%,
+				transparent 15%
+			),
+			radial-gradient(
+				circle at 50% 75%,
+				#ff8c 20%,
+				transparent 15%
+			),
+			radial-gradient(
+				circle at 100% 75%,
+				#ff8c 15%,
+				transparent 15%
+			),
+			radial-gradient(
+				circle at 25% 25%,
+				#ff8 20%,
+				#fd2 20% 25%,
+				transparent 25%
+			),
+			radial-gradient(
+				circle at 75% 75%,
+				#fd2 20%,
+				transparent 20%
+			),
+			transparent;
+		content: "";
+		height: 100%;
+		opacity: .5;
+		transform:
+			translateZ(-500px)
+			rotateX(-20deg);
+		transform-origin: 50% 50%;
+		z-index: 2;
+	}
+
+		@keyframes background {
+			from {
+				background-position-x:
+					0%,
+					0%,
+					0%,
+					0%,
+					0%,
+					0%,
+					0%,
+					0%;
+			};
+			to {
+				background-position-x:
+					0,
+					100%,
+					100%,
+					100%,
+					100%,
+					100%,
+					100%,
+					0;
+			};
+		}

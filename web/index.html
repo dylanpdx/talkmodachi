@@ -3,515 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text to Speech Generator</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            width: 100vw;
-            height: 100vh;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(#fe4, #ffb);
-            display: grid;
-            grid-template-rows: auto 1fr auto;
-            perspective: 1000px;
-            overflow: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            height: 100%;
-            width: 200%;
-            left: -50%;
-            bottom: 0;
-            transform:
-                translateZ(-500px)
-                rotateX(-20deg);
-            transform-origin: 50% 50%;
-            perspective: inherit;
-            background:
-                linear-gradient(
-                    #fe4,
-                    transparent 30% 60%,
-                    #ff8
-                ),
-                radial-gradient(
-                    circle at 75% 25%,
-                    #ff8 20%,
-                    transparent 20%
-                ),
-                radial-gradient(
-                    circle at 0% 75%,
-                    #ff8c 15%,
-                    transparent 15%
-                ),
-                radial-gradient(
-                    circle at 50% 75%,
-                    #ff8c 20%,
-                    transparent 15%
-                ),
-                radial-gradient(
-                    circle at 100% 75%,
-                    #ff8c 15%,
-                    transparent 15%
-                ),
-                radial-gradient(
-                    circle at 25% 25%,
-                    #ff8 20%,
-                    #fd2 20% 25%,
-                    transparent 25%
-                ),
-                radial-gradient(
-                    circle at 75% 75%,
-                    #fd2 20%,
-                    transparent 20%
-                ),
-                transparent;
-            background-size:
-                100% 100%,
-                250px 250px,
-                250px 250px,
-                250px 250px,
-                250px 250px,
-                250px 250px,
-                250px 250px,
-                100% 100%;
-            z-index: 2;
-            opacity: .5;
-        }
-
-        body::after {
-            content: '';
-            position: fixed;
-            height: 75%;
-            width: 200%;
-            bottom: 0;
-            left: -50%;
-            transform: rotateX(90deg);
-            transform-origin: 50% 100%;
-            perspective: inherit;
-            background:
-                radial-gradient(transparent, #ff9 75%),
-                radial-gradient(
-                    circle at 75% 25%,
-                    #ff8 20%,
-                    transparent 20%
-                ),
-                radial-gradient(
-                    circle at 0% 75%,
-                    #ff8c 15%,
-                    transparent 15%
-                ),
-                radial-gradient(
-                    circle at 50% 75%,
-                    #ff8c 20%,
-                    transparent 15%
-                ),
-                radial-gradient(
-                    circle at 100% 75%,
-                    #ff8c 15%,
-                    transparent 15%
-                ),
-                radial-gradient(
-                    circle at 25% 25%,
-                    #ff8 20%,
-                    #fd2 20% 25%,
-                    transparent 25%
-                ),
-                radial-gradient(
-                    circle at 75% 75%,
-                    #fd2 20%,
-                    transparent 20%
-                ),
-                transparent;
-            background-size:
-                100% 100%,
-                250px 250px,
-                250px 250px,
-                250px 250px,
-                250px 250px,
-                250px 250px,
-                250px 250px,
-                100% 100%;
-            z-index: 0;
-        }
-
-        header {
-            width: 100%;
-            height: fit-content;
-            margin: 5px;
-            padding: 5px 0;
-            border-radius: calc(1em + 5px) / 50%;
-            text-align: center;
-            background:
-                conic-gradient(
-                    #fd7 25%,
-                    #fc4 25%,
-                    #fc4 50%,
-                    #fd7 50%,
-                    #fd7 75%,
-                    #fc4 75%
-                );
-            background-size: 10px 10px;
-            box-shadow:
-                inset 0 3px 0 2px #ffb,
-                inset 0 -3px 0 2px #fb3;
-
-            h1 {
-                font-weight: normal;
-                margin: 0;
-            }
-        }
-
-        main {
-            width: fit-content;
-            max-width: 50vw;
-            background: #ffaa;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            height: fit-content;
-            justify-self: center;
-            align-self: center;
-            z-index: 3;
-            display: flex;
-            flex-direction: column;
-            transition: .3s all;
-            gap: 10px;
-        }
-
-        .pill {
-            font-weight: normal;
-            margin: 0 auto .5em;
-            background: #ffd;
-            width: 50%;
-            padding: 5px 1ch;
-            text-align: center;
-            border-radius: 1.5ch / 50%;
-            box-shadow:
-                0 2px 0 0 #dd9;
-        }
-
-        textarea,
-        #status {
-            --border: #fc7;
-            --shadow: #fed;
-            --background: #fff;
-            width: calc(100% - 20px);
-            max-width: 80ch;
-            min-height: 7em;
-            background: var(--background);
-            border: 2px solid var(--border) !important; /* TODO: Why the hell is this necessary? */
-            padding: .5em;
-            border-radius: 1ch;
-            resize: vertical;
-            font-size: 16px;
-            box-shadow:
-                inset 0 3px var(--shadow),
-                inset 3px 0 var(--shadow),
-                inset -3px 0 var(--shadow);
-            transition: .1s all;
-        }
-
-            textarea:where(:focus, :hover) {
-                --border: #088;
-                --shadow: #cff;
-                --background: #eff
-            }
-
-            textarea:focus {
-                --background: #7dd;
-                outline: 0;
-            }
-
-        .button-container {
-            width: 100%;
-            display: flex;
-            margin-top: 0;
-            gap: 10px;
-            justify-content: center;
-            align-items: center;
-        }
-
-        button,
-        #intonation label,
-        #downloadButton {
-            --background: #f60;
-            --topborder: #d50;
-            --reflection: #d50;
-            --midborder: #830;
-            --botborder: #620;
-            width: fit-content;
-            background: var(--background);
-            border: 4px solid;
-            border-radius: 10px;
-            border-color:
-                var(--topborder)
-                var(--midborder)
-                var(--botborder);
-            box-shadow:
-                inset 0 1px 0 0 var(--midborder),
-                inset 0 .6em 0 0 var(--reflection);
-            text-shadow: 2px 1px 0 var(--reflection);
-            padding: .6em 2ch .3em;
-            text-align: center;
-            font-size: larger;
-            transition: .1s all;
-        }
-
-            button:hover,
-            #downloadButton:hover {
-                --topborder: #aff;
-                --midborder: #6dd;
-                --botborder: #088;
-                --reflection: var(--topborder);
-                --background: #9ee;
-                cursor: pointer;
-            }
-
-            button:disabled {
-                --background: #ccc;
-                --topborder: #eee;
-                --reflection: #fff;
-                --midborder: #999;
-                --botborder: #666;
-                color: #000;
-                cursor: not-allowed;
-            }
-
-            button#toggleControls:not(:hover),
-            #intonation label:not(:has(input:checked)),
-            #downloadButton {
-                --background: #fc0;
-                --topborder: #da0;
-                --reflection: #fd3;
-                --midborder: #a80;
-                --botborder: #640;
-                text-shadow: 2px 1px 0 #ffa;
-            }
-
-
-        #status {
-            --border: #ccc;
-            --shadow: #eee;
-            padding: .2em;
-            color: #555;
-            min-height: unset;
-            width: 90%;
-            text-align: center;
-            margin: auto;
-        }
-
-        #controlsContainer {
-            opacity: 1;
-            max-height: 100%;
-            overflow: hidden;
-            transition: .3s all;
-        }
-
-        #controlsContainer.hidden {
-            opacity: 0;
-            max-height: 0%;
-        }
-
-        .control-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .control {
-            display: grid;
-            grid-template-rows: auto auto;
-            gap: 10px;
-        }
-
-        label.pill {
-            display: block;
-            text-align: center;
-            margin-bottom: 5px;
-        }
-
-        .slider {
-            width: 90%;
-            height: 1em;
-            appearance: none;
-            background:
-                linear-gradient(
-                    transparent calc(50% - 2px),
-                    #222 calc(50% - 2px),
-                    #555 calc(50% + 2px),
-                    transparent calc(50% + 2px)
-                ),
-                repeating-linear-gradient(
-                    90deg,
-                    #555 0px 4px,
-                    transparent 4px 16px),
-                repeating-linear-gradient(
-                    90deg,
-                    #aaa 0px 4px,
-                    transparent 4px 16px);
-            background-size:
-                100% 100%,
-                100% 50%,
-                100% 100%;
-            background-repeat:
-                repeat,
-                no-repeat;
-            outline: none;
-            justify-self: center;
-        }
-
-        input[type=range]::-moz-range-thumb,
-        input[type=range]::-webkit-slider-thumb {
-            --top: #fdc;
-            --border: #c60;
-            --bg: #f60;
-            appearance: none;
-            width: 6px;
-            height: 200%;
-            border-radius: 4px;
-            border: 3px solid;
-            border-color: var(--top) var(--border) var(--border);
-            box-shadow: 0 0 0 2px #000;
-            background: var(--bg);
-        }
-
-            input[type=range]:hover::-moz-range-thumb,
-            input[type=range]:hover::-webkit-slider-thumb {
-                cursor: grab;
-            }
-
-            input[type=range]:active::-moz-range-thumb,
-            input[type=range]:active::-webkit-slider-thumb {
-                --top: #cff;
-                --border: #088;
-                --bg: #0ff;
-                cursor: move;
-            }
-
-        #intonation {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-
-            label {
-                height: 1.5em;
-                width: 1.5em;
-                padding: 0;
-                position: relative;
-                cursor: pointer;
-
-                span {
-                    display: block;
-                    width: 100%;
-                    text-align: center;
-                    position: absolute;
-                    font-size: 2em;
-                    line-height: 0.7;
-                }
-            }
-
-            input[type=radio] {
-                opacity: 0;
-                height: 0;
-                width: 0;
-                position: absolute;
-            }
-        }
-
-        #output:not([hidden]) {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        
-            #audioContainer {
-                #playButton {
-                    height: 40px;
-                    width: 2.5em;
-                    padding: 0;
-                    position: relative;
-                    
-                    span {
-                        display: block;
-                        width: 100%;
-                        text-align: center;
-                        position: absolute;
-                        font-size: 2em;
-                        line-height: 0;
-                    }
-                }
-                
-                #downloadButton{
-                    height: 32px;
-                    padding: 0 1ch;
-                    line-height: 1.7;
-                }
-            }
-        }
-
-        footer {
-            width: 100%;
-            position: fixed;
-            bottom: -6px;
-            left: 0;
-            display: flex;
-            justify-content: space-between;
-            
-            a:not(#lensdeer) {
-                font-size: 2em;
-                background: #f60;
-                border: 6px solid;
-                border-color: #fdc #c60 transparent #c60;
-                margin: 0 4px;
-                box-shadow: 0 0 0 4px #000;
-                border-radius: 8px 8px 0 0;
-                padding: 0.5ch 2ch 0;
-                color: #000;
-                text-decoration: none;
-                transition: 0.1s all;
-            }
-            
-            #lensdeer {
-                width: 16px;
-                height: 16px;
-                position: absolute;
-                top: -24px;
-                right: 0px;
-                opacity: .5;
-                image-rendering: pixelated;
-                transition: .2s all;
-                white-space: nowrap;
-                text-align: right;
-                filter: grayscale(1);
-                margin-right: 4px;
-                text-decoration: underline dotted;
-                font-size: 16px;
-                color: #000;
-                display: flex;
-                gap: .5ch;
-                
-                img {
-                    width: 16px;
-                    height: 16px;
-                }
-            }
-            
-                #lensdeer:hover{
-                    right: calc(16px + 12ch);
-                    opacity: 1;
-                    background: transparent;
-                    filter: none;
-                }
-            
-            a:not(#lensdeer):hover {
-                background: #0ff;
-                border-color: #cff #088 transparent #088;
-            }
-        }
-    </style>
+    <title>Talkmodachi - Text to Speech Generator</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
@@ -522,99 +15,85 @@
         <section id="input">
             <h2 class="pill">Text Input</h2>
 
-            <textarea id="textInput" placeholder="Enter the text you want to convert to speech..." rows=5></textarea>
+            <textarea id="textInput" class="textBox" placeholder="Enter the text you want to convert to speech..." rows=5></textarea>
 
             <section class="controls-container" id="controlsContainer" hidden="true">
                 <h2 class="pill">Voice Parameters</h2>
                 
-                <div class="control-group">
-                    <div class="control">
-                        <label for="pitchSlider" class="pill">
-                            Pitch
+                <label for="pitchSlider" class="control">
+                    <span class="pill">Pitch</span>
+                    <input type="range" min="0" max="1" step="0.01" value="0.5" class="slider" id="pitchSlider">
+                </label>
+                
+                <label for="speedSlider" class="control">
+                    <span class="pill">Speed</span>
+                    <input type="range" min="0" max="1" step="0.01" value="0.5" class="slider" id="speedSlider">
+                </label>
+                
+                <label for="qualitySlider" class="control">
+                    <span class="pill">Quality</span>
+                    <input type="range" min="0" max="1" step="0.01" value="0.5" class="slider" id="qualitySlider">
+                </label>
+                
+                <label for="toneSlider" class="control">
+                    <span class="pill">Tone</span>
+                    <input type="range" min="0" max="1" step="0.01" value="0.5" class="slider" id="toneSlider">
+                </label>
+                
+                <label for="accentSlider" class="control">
+                    <span class="pill">Accent</span>
+                    <input type="range" min="0" max="1" step="0.01" value="0.5" class="slider" id="accentSlider">
+                </label>
+                
+                <label for="intonation" class="control">
+                    <label class="pill">Intonation</label>
+                    <div id="intonation">
+                        <label class="yellow button">
+                            <input type="radio" name="intonation" value="1" checked>
+                            <span>1</span>
                         </label>
-                        <input type="range" min="0" max="1" step="0.01" value="0.5" class="slider" id="pitchSlider">
-                    </div>
-                    
-                    <div class="control">
-                        <label for="speedSlider" class="pill">
-                            Speed
+                        <label class="yellow button">
+                            <input type="radio" name="intonation" value="2">
+                            <span>2</span>
                         </label>
-                        <input type="range" min="0" max="1" step="0.01" value="0.5" class="slider" id="speedSlider">
-                    </div>
-                    
-                    <div class="control">
-                        <label for="qualitySlider" class="pill">
-                            Quality
+                        <label class="yellow button">
+                            <input type="radio" name="intonation" value="3">
+                            <span>3</span>
                         </label>
-                        <input type="range" min="0" max="1" step="0.01" value="0.5" class="slider" id="qualitySlider">
-                    </div>
-                    
-                    <div class="control">
-                        <label for="toneSlider" class="pill">
-                            Tone
+                        <label class="yellow button">
+                            <input type="radio" name="intonation" value="4">
+                            <span>4</span>
                         </label>
-                        <input type="range" min="0" max="1" step="0.01" value="0.5" class="slider" id="toneSlider">
                     </div>
-                    
-                    <div class="control">
-                        <label for="accentSlider" class="pill">
-                            Accent
-                        </label>
-                        <input type="range" min="0" max="1" step="0.01" value="0.5" class="slider" id="accentSlider">
-                    </div>
-                    
-                    <div class="control">
-                        <label class="pill">
-                            Intonation
-                        </label>
-                        <div id="intonation">
-                            <label>
-                                <input type="radio" name="intonation" value="1" checked>
-                                <span>1</span>
-                            </label>
-                            <label>
-                                <input type="radio" name="intonation" value="2">
-                                <span>2</span>
-                            </label>
-                            <label>
-                                <input type="radio" name="intonation" value="3">
-                                <span>3</span>
-                            </label>
-                            <label>
-                                <input type="radio" name="intonation" value="4">
-                                <span>4</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
+                </label>
             </section>
             
-            <div class="button-container">
+            <div class="buttonContainer">
                 <button id="generateBtn" onclick="generateSpeech()" style="grid-area: generate;">Generate Speech</button>
-                <button id="toggleControls" style="grid-area: options;">Show Controls</button>
+                <button id="toggleControls" class="yellow" style="grid-area: options;">Show Controls</button>
             </div>
         </section>
         
         <section id="output" hidden>
             <h2 class="pill">Output</h2>
-            <div id="status" style="grid-area: status;"></div>
-            <div id="audioContainer" class="button-container" hidden>
+            <div id="status" class="textBox"></div>
+            <div id="audioContainer" class="buttonContainer" hidden>
                 <audio id="audioPlayer"></audio>
                 <button id="playButton" onclick="togglePlay()">
                     <span>⏯</span>
                 </button>
-                <a id="downloadButton">Download</a>
+                <a id="downloadButton" class='yellow button'>Download</a>
             </div>
         </section>
     </div>
     
     <footer>
-        <a href="https://github.com/dylanpdx/talkmodachi">Source</a>
+        <a class="button" href="https://github.com/dylanpdx/talkmodachi">Source</a>
         <a id="lensdeer" href="https://lensdeer.neocities.org">
             <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAbJJREFUOI2Nkz1IHFEUhb+RxUBwLZYlLFql0bAgSvxpd6ezkLAQELHLIoqtTCMEISATCEGUFCIIdoNNICOBSJrZkUUwzEBIQFYbEdZEyGBjmiXFTbG8yZud+HOaB4d7zjv33vcM7oCZRwC8CMPMIz8eZAHoKQwQhqGRGezPik50CgHKY0CArFvjTL9r0FMYoFQqAUhGiRXRex7+E2koj8GjpyWgwe/LU3yfdgIgJnrPw5SwE7WdBaaWvfjCrpOLayNw39xLDJArVjh0N/B9nzAMDUP1ex8xwNLqJgDPJhfxItot6NhuPGbuyRm1INl/LWifay8XE/UpA2gXO44FwMT8ewjObkzU9T9SiXPFCgD7X+s4jpVIlTDwIoyRPhvne5aHfyLKL7b4spuLi/ZXDgBYt8bjhF6EkXAy88h1sCmD/VlpNevSatbFrdriVm1pNevy87MlZh55NYnojyyjxGoL344+xaYTM1fkihWujj8wO/s2HqZ+e2qNak06ugtDsUln9Fvfwd6v0RSn/5fEENWE1TnSZ1PbmgPg0N3g42uTleHnuFVbUga6iW6mxEBiKzr+AryyuSBb8rXIAAAAAElFTkSuQmCC">
             UI by lensdeer
         </a>
-        <a href="https://ko-fi.com/dylanpdx">Donate</a>
+        <a class="button" href="https://ko-fi.com/dylanpdx">Donate</a>
     </footer>
 
     <script>
