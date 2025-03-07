@@ -349,15 +349,6 @@ body {
 
 	body::before,
 	body::after {
-		background-size:
-			100% 100%,
-			250px 250px,
-			250px 250px,
-			250px 250px,
-			250px 250px,
-			250px 250px,
-			250px 250px,
-			100% 100%;
 		inset: auto auto 0 -50%;
 		perspective: inherit;
 		position: fixed;
@@ -400,6 +391,15 @@ body {
 				transparent 20%
 			),
 			transparent;
+		background-size:
+			100% 100%,
+			250px 250px,
+			250px 250px,
+			250px 250px,
+			250px 250px,
+			250px 250px,
+			250px 250px,
+			100% 100%;
 		content: '';
 		height: 75%;
 		transform: rotateX(90deg);
@@ -449,6 +449,15 @@ body {
 				transparent 20%
 			),
 			transparent;
+		background-size:
+			100% 100%,
+			250px 250px,
+			250px 250px,
+			250px 250px,
+			250px 250px,
+			250px 250px,
+			250px 250px,
+			100% 100%;
 		content: "";
 		height: 100%;
 		opacity: .5;
