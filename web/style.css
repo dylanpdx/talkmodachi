@@ -292,10 +292,11 @@ body {
 	
 	footer {
 		display: flex;
-		inset: auto auto -6px 0;
+		inset: auto auto 1.2em 0;
 		justify-content: space-between;
 		position: fixed;
 		width: 100%;
+		z-index: 3;
 		
 		a.button {
 			background: #f60;
