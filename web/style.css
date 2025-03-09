@@ -525,3 +525,10 @@ body {
 		}
 	}
 }
+
+@media (prefers-reduced-motion) {
+	* {
+		animation: none;
+		transition: none;
+	}
+}
