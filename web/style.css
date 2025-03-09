@@ -2,11 +2,11 @@ body {
 	background: linear-gradient(#fe4, #ffb);
 	display: grid;
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-	height: 100vh;
 	margin: 0;
+	min-height: 100vh;
 	padding: 0;
 	perspective: 1000px;
-	overflow: hidden;
+	overflow: hidden scroll;
 	width: 100vw;
 
 	header {
@@ -292,7 +292,7 @@ body {
 	
 	footer {
 		display: flex;
-		inset: auto auto 1.2em 0;
+		inset: auto auto 0 0;
 		justify-content: space-between;
 		position: fixed;
 		width: 100%;
@@ -405,7 +405,6 @@ body {
 		height: 75%;
 		transform: rotateX(90deg);
 		transform-origin: 50% 100%;
-		width: 200%;
 		z-index: 0;
 	}
 
@@ -493,3 +492,36 @@ body {
 					0;
 			};
 		}
+
+@media screen and (max-width: 770px) {
+	body {
+		grid-template-rows: auto 1fr auto;
+		gap: 10px;
+
+		header,
+		footer {
+			position: relative;
+		}
+
+			footer a.button { font-size: 1.5em;}
+
+		main {
+			width: calc(90% - 40px);
+			max-width: unset;
+		}
+	}
+}
+
+@media screen and (max-width: 480px) {
+	body {
+		main{
+			#input,
+			#output:not([hidden]) {
+				#controlsContainer:not([hidden]) {
+					display: flex;
+					flex-direction: column;
+				}
+			}
+		}
+	}
+}
