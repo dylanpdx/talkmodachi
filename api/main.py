@@ -4,7 +4,6 @@ import time
 import tts
 from flask_cors import CORS
 
-
 def formatCommandP(commandCode,param):
     commandCode = int(commandCode)
     param = int(param)
@@ -26,11 +25,11 @@ def text_to_speech():
     Expected JSON payload:
     {
         "text": "Text to convert to speech",
-        "pitch": 0.5,         # Optional: 0 to 1
-        "speed": 0.5,         # Optional: 0 to 1
-        "quality": 0.5,       # Optional: 0 to 1
-        "tone": 0.5,          # Optional: 0 to 1
-        "accent": 0.5,        # Optional: 0 to 1
+        "pitch": 50,         # Optional: 0 to 100
+        "speed": 50,         # Optional: 0 to 100
+        "quality": 50,       # Optional: 0 to 100
+        "tone": 50,          # Optional: 0 to 100
+        "accent": 50,        # Optional: 0 to 100
         "intonation": 1       # Optional: 1, 2, 3, or 4
     }
     
@@ -42,33 +41,27 @@ def text_to_speech():
     if not data or 'text' not in data:
         return jsonify({'error': 'Missing text parameter'}), 400
     
-    text = data['text']
+    text = data['text'].replace('\n', '')
     
     # Extract voice parameters (with defaults if not provided)
-    pitch = float(data.get('pitch', 0.5))
-    speed = float(data.get('speed', 0.5))
-    quality = float(data.get('quality', 0.5))
-    tone = float(data.get('tone', 0.5))
-    accent = float(data.get('accent', 0.5))
+    pitch = int(data.get('pitch', 50))
+    speed = int(data.get('speed', 50))
+    quality = int(data.get('quality', 50))
+    tone = int(data.get('tone', 50))
+    accent = int(data.get('accent', 50))
     intonation = int(data.get('intonation', 1))
     
     # Validate
-    if not (0 <= pitch <= 1 and 0 <= speed <= 1 and 0 <= quality <= 1 and 
-            0 <= tone <= 1 and 0 <= accent <= 1 and intonation in [1, 2, 3, 4]):
+    if not (0 <= pitch <= 100 and 0 <= speed <= 100 and 0 <= quality <= 100 and 
+            0 <= tone <= 100 and 0 <= accent <= 100 and intonation in [1, 2, 3, 4]):
         return jsonify({'error': 'Invalid parameter values'}), 400
-    
-    # Remap pitches; TODO: make this to match ingame sliders
-    pitch = int(pitch / 0.0001)
-    tone = int(tone * 10000)
-    quality = int(quality / 0.0001)
-    accent = int(accent / 0.0001)
+    intonation = intonation - 1 # convert to 0-based index
 
-    formatted_text = formatCommand(1)+formatCommandP(1,pitch)+formatCommandP(2,tone)+formatCommandP(5,quality)+formatCommandP(6,accent)+text
-    
+    formatted_text = text
     try:
         # Generate audio from text using the tts module
-        audio_data = tts.generateText(formatted_text)
-        
+        audio_data = tts.generateText(formatted_text, pitch, speed, quality, tone, accent, intonation)
+
         # Create a BytesIO object to serve the audio data
         audio_buffer = BytesIO(audio_data)
         audio_buffer.seek(0)

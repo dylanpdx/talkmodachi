@@ -3,18 +3,31 @@
 #include <stdlib.h>
 #include "mem.h"
 #include <3ds.h>
+#include "tomoFunc.h"
+#include "tomoStructs.h"
 
-typedef struct {
-	int eTextFormat; // always 0
-	int ulTextLength; // length of text * 2
-	uint16_t *szInText;
-}  ttsInput;
+enum audioStatus{
+	WAITING_FOR_TEXT = 1,
+	PROCESSING = 2,
+	PROCESSING_FINISHED = 3,
+	ERROR = 4,
+	TEXT_READY = 5
+};
+
+enum ttsMode{
+	REGULAR,
+	RAW,
+};
 
 typedef struct{
-	volatile char status; // 1=waiting for text, 2=processing, 3=finished, 4=error, 5=text ready
+	volatile enum audioStatus status;
+	volatile enum ttsMode mode;
+	volatile char pitch,speed,quality,tone,accent,intonation;
 	int audioSize;
 	char* audioData;
 	int allocatedSize;
+	volatile char songDataSize;
+	short songData[255];
 } audioRenderJob;
 
 #define textDataLoc 0x00b27daa // random unused (hopefully) memory location
@@ -23,10 +36,36 @@ audioRenderJob* audioJob = (audioRenderJob*)0x008c00e4; // other unused memory l
 int* ttsPtr = 0x0;
 int ttsNumber=0;
 
-typedef uint doTTS(int *param_1,int param_2,ttsInput *param_3); // no documentation online, so i'm winging it
-doTTS* f = (doTTS*)0x00191e40;
+uint16_t* utfTo16(char* in,int* len){
+	int inLen = strlen(in)+1;
+	*len = inLen*2;
+	uint16_t* out = (uint16_t*)tmalloc(*len);
+	for (int i = 0; i < inLen; i++){
+		out[i] = in[i];
+	}
+	return out;
+}
 
-void callTTS(char* text){
+int wcslen(const uint16_t* start)
+{
+    // NB: start is not checked for nullptr!
+    const uint16_t* end = start;
+    while (*end != 0)
+        ++end;
+    return end - start;
+}
+
+void callTTS(uint16_t* text){
+	int textSize = wcslen(text)*2;
+	ttsGlobal* ttsGlob = getTtsGlobal();
+
+	//((void(*)(ttsGlobal*))0x0039153c)(ttsGlob); // this may not be needed
+	setVoicePitchFunc(ttsGlob,audioJob->pitch);
+	setVoiceSpeedFunc(ttsGlob,audioJob->speed);
+	setVoiceQualityFunc(ttsGlob,audioJob->quality);
+	setVoiceToneFunc(ttsGlob,audioJob->tone);
+	setVoiceAccentFunc(ttsGlob,audioJob->accent);
+	setVoiceIntonationFunc(ttsGlob,audioJob->intonation);
 
 	if (audioJob->audioData != 0x0){
 		tfree(audioJob->audioData); // free previous audio data
@@ -34,27 +73,19 @@ void callTTS(char* text){
 	}
 
 	// setup
-	int* ptr = (int*)0x00acb54c;
-	((void(*)(int*))0x003914e8)((int*)ptr[0]); // call setup function(?)
-	//((void(*)(int*))0x0035adf8)((int*)ptr[0]);
+	setupTTS();
 
-	int len = strlen(text)+1; // include null terminator
 	ttsInput* tts = (ttsInput*)tmalloc(sizeof(ttsInput));
-	tts->eTextFormat = 0;
-	tts->ulTextLength = len*2;
-	tts->szInText = (uint16_t*)tmalloc(len*2);
-	for (int i = 0; i < len; i++){
-		tts->szInText[i] = text[i];
-	}
+	tts->unknown = 0;
+	tts->textInputLen = textSize;
+	tts->textInput = text;
 
-	uint r = f(ttsPtr,ttsNumber,tts);
+	uint r = ttsFunc(ttsPtr,ttsNumber,tts);
 	// we have finished rendering the audio
-	tfree(tts->szInText);
 	tfree(tts);
 
-
-	if (audioJob->status !=4){
-		audioJob->status = 3;
+	if (audioJob->status !=ERROR){
+		audioJob->status = PROCESSING_FINISHED;
 	}
 }
 
@@ -63,17 +94,43 @@ void saveTtsSettings(int* ptr){
 	ttsNumber = ptr[1];
 
 	audioJob->status = 0;
+	audioJob->mode = REGULAR;
 	audioJob->audioSize = 0;
 	audioJob->audioData = 0x0;
+	audioJob->pitch = 50;
+	audioJob->speed = 50;
+	audioJob->quality = 50;
+	audioJob->tone = 50;
+	audioJob->accent = 50;
+	audioJob->intonation = 0;
 }
 
 void mainLoopF(){
-	audioJob->status = 1;
+	int sz = 0;
+	int* ptr = (int*)((int*)0x00acb5a4)[0];
+	void* effectsDataLoc = tmalloc(0x1000);
+	uint16_t* mrkDataLoc = tmalloc(0x1000);
+
+	audioJob->status = WAITING_FOR_TEXT;
 	while(true){
-		if (audioJob->status==5){
-			audioJob->status = 2;
+		if (audioJob->status==TEXT_READY){
+			audioJob->status = PROCESSING;
 			audioJob->audioSize = 0; // reset audio size
-			callTTS((char*)textDataLoc);
+
+			// save the text data
+			int textSize = 0;
+			uint16_t* text = utfTo16((char*)textDataLoc,&textSize);
+
+			if (audioJob->songDataSize == 0){
+				callTTS(text);
+			}else{
+				msbtToTextFunc((void*)ptr[4],(char*)textDataLoc,&sz,0x200,(short*)((char*)&audioJob->songData-1),audioJob->songDataSize);
+				textToEffectsFunc((int*)effectsDataLoc,(char*)textDataLoc,sz*2,0x18,0); // outputs @ outputvar+0x228
+				generateMrkFunc((char*)mrkDataLoc,0x1800,(char*)text,(uint16_t*)effectsDataLoc,0x30FD,0,0);
+				callTTS(mrkDataLoc);
+			}
+
+			tfree(text);
 		}
 	}
 }
