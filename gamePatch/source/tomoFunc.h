@@ -41,9 +41,14 @@ static setVoiceTone* setVoiceToneFunc = (setVoiceTone*)0x0039133c;
 typedef void setVoiceAccent(ttsGlobal* effects,int accent);
 static setVoiceAccent* setVoiceAccentFunc = (setVoiceAccent*)0x0039131c;
 
-// intonation
 typedef void setVoiceIntonation(ttsGlobal* effects,int intonation);
 static setVoiceIntonation* setVoiceIntonationFunc = (setVoiceIntonation*)0x0039132c;
+
+typedef void setupSingingParams(singingParams* singingParams);
+static setupSingingParams* setupSingingParamsFunc = (setupSingingParams*)0x00741654;
+
+typedef void repairSingingParams(singingParams* singingParams,int unknown);
+static repairSingingParams* repairSingingParamsFunc = (repairSingingParams*)0x00744bd0;
 
 void setupTTS();
 

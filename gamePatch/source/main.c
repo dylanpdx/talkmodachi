@@ -108,8 +108,11 @@ void saveTtsSettings(int* ptr){
 void mainLoopF(){
 	int sz = 0;
 	int* ptr = (int*)((int*)0x00acb5a4)[0];
-	void* effectsDataLoc = tmalloc(0x1000);
+	singingParams* effectsDataLoc = tmalloc(0x1000);
 	uint16_t* mrkDataLoc = tmalloc(0x1000);
+
+	// zero effectsDataLoc
+	memset(effectsDataLoc,0,0x1000);
 
 	audioJob->status = WAITING_FOR_TEXT;
 	while(true){
@@ -124,8 +127,16 @@ void mainLoopF(){
 			if (audioJob->songDataSize == 0){
 				callTTS(text);
 			}else{
+				setupSingingParamsFunc(effectsDataLoc);
+				int bpm = 73;
 				msbtToTextFunc((void*)ptr[4],(char*)textDataLoc,&sz,0x200,(short*)((char*)&audioJob->songData-1),audioJob->songDataSize);
 				textToEffectsFunc((int*)effectsDataLoc,(char*)textDataLoc,sz*2,0x18,0); // outputs @ outputvar+0x228
+				repairSingingParamsFunc(effectsDataLoc,0);
+
+				effectsDataLoc->bpm = bpm*2;
+				effectsDataLoc->field4_0x210 = 2; // root note
+
+				
 				generateMrkFunc((char*)mrkDataLoc,0x1800,(char*)text,(uint16_t*)effectsDataLoc,0x30FD,0,0);
 				callTTS(mrkDataLoc);
 			}
