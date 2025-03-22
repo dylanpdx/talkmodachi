@@ -12,7 +12,7 @@ export async function onRequest(context) {
     
     const obj = await context.env.TM_ASSETS.get(key);
     if (obj === null) {
-      return new Response("Not found", { status: 404 });
+      return new Response("Not found: "+key, { status: 404 });
     }
     
     return new Response(obj.body, {
