@@ -7,12 +7,12 @@ export async function onRequest(context) {
   } else if (key.startsWith('/assets')) {
       key = key.slice(7); // Remove '/assets'
   } else if (key.startsWith('/')) {
-      key = key.slice(1); // Just remove leading slash
+      key = key.slice(1); // remove leading slash
   }
   
   const obj = await context.env.TM_ASSETS.get(key);
   if (obj === null) {
-    return new Response("Not found: "+key, { status: 404 });
+    return new Response("Not found", { status: 404 });
   }
   
   return new Response(obj.body, {
