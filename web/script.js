@@ -1,4 +1,4 @@
-const apiUrl = 'http://localhost:5000/tts';
+const apiUrl = '/tts';
 const textInput = document.getElementById('textInput');
 const generateBtn = document.getElementById('generateBtn');
 const status = document.getElementById('status');
