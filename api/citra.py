@@ -16,6 +16,7 @@ CITRA_PORT = 45987
 class Citra:
     def __init__(self, address="127.0.0.1", port=CITRA_PORT):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.settimeout(1)
         self.address = address
 
     def is_connected(self):
