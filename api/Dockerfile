@@ -16,7 +16,7 @@ RUN apk update && apk add --no-cache \
     xorg-server-dev
 
 WORKDIR /src
-RUN git clone --recursive https://github.com/PabloMK7/citra.git .
+RUN git clone --recursive https://github.com/dylanpdx/citra.git .
 
 # Build Citra
 RUN mkdir build && \
