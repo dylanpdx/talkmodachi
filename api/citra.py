@@ -4,7 +4,7 @@ import enum
 import socket
 
 CURRENT_REQUEST_VERSION = 1
-MAX_REQUEST_DATA_SIZE = 1024 # This requires a custom Citra build
+MAX_REQUEST_DATA_SIZE = 128 # This requires a custom Citra build
 MAX_PACKET_SIZE = 16+MAX_REQUEST_DATA_SIZE
 
 class RequestType(enum.IntEnum):
