@@ -7,6 +7,55 @@ const toggleControls = document.getElementById('toggleControls');
 const controlsContainer = document.getElementById('controlsContainer');
 const downloadButton = document.getElementById('downloadButton');
 
+// Initialize things for the VM
+/*var Module = typeof Module !== 'undefined' ? Module : {};
+Module['preRun'] = Module['preRun'] || [];
+Module["locateFile"] = function (path,scriptDirectory) {
+	return "/assets/" + path;
+};
+
+Module['preRun'].push((mod) => {
+    mod.FS.mkdir('/share');
+	mod.FS.mkdir('/share/user');
+	mod.FS.mkdir('/share/user/config');
+
+	// fetch citra.bin and write it to /share
+	fetch('/assets/citra')
+	.then(response => response.arrayBuffer())
+	.then(buffer => {
+		const data = new Uint8Array(buffer);
+		mod.FS.writeFile('/share/citra', data);
+		mod.FS.chmod('/share/citra', 0o755);
+	});
+
+	fetch('/assets/config.ini')
+	.then(response => response.arrayBuffer())
+	.then(buffer => {
+		const data = new Uint8Array(buffer);
+		mod.FS.writeFile('/share/user/config/sdl2-config.ini', data);
+	});
+
+    //mod.FS.writeFile('/share/file', 'test');
+});
+
+function sendFileToVM(file) {
+	const reader = new FileReader();
+	reader.onload = function() {
+		const data = new Uint8Array(reader.result);
+		Module.FS.writeFile('/share/' + file.name, data);
+	};
+	reader.readAsArrayBuffer(file);
+}
+
+function upload(){
+	// read from file input
+	const fileInput = document.getElementById('myfile');
+	const files = fileInput.files;
+	for (let i = 0; i < files.length; i++) {
+		sendFileToVM(files[i]);
+	}
+}*/
+
 // Initialize sliders
 const sliders = {
 	'pitch': document.getElementById('pitchSlider'),

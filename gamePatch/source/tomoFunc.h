@@ -50,6 +50,9 @@ static setupSingingParams* setupSingingParamsFunc = (setupSingingParams*)0x00741
 typedef void repairSingingParams(singingParams* singingParams,int unknown);
 static repairSingingParams* repairSingingParamsFunc = (repairSingingParams*)0x00744bd0;
 
+typedef void RESET_TTS(audioEffectsParams* effects);
+static RESET_TTS* RESET_TTSFunc = (RESET_TTS*)0x001be020;
+
 void setupTTS();
 
 ttsGlobal* getTtsGlobal();

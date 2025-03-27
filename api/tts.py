@@ -2,7 +2,10 @@ import citra
 import time
 emu = citra.Citra()
 from pydub import AudioSegment
-
+import songConverter
+import struct
+import subprocess
+import os
 '''
 Status codes:
 1 - Emulator is waiting for text
@@ -15,6 +18,36 @@ Status codes:
 # Lazy way to store data the game needs; these memory addresses aren't used by the game (hopefully)
 audioRenderJobAddr=0x008c00e4
 textDataAddr=0x00b27daa
+emulatorProcess = None
+
+def readJob():
+    structDef = "BBBBBBBBBiIiB"
+    structSize = struct.calcsize(structDef)
+    data = emu.read_memory(audioRenderJobAddr,structSize)
+    unpacked = struct.unpack(structDef,data)
+    return {
+        "status": unpacked[0],
+        "bpm": unpacked[1],
+        "stretch": unpacked[2],
+        "pitch": unpacked[3],
+        "speed": unpacked[4],
+        "quality": unpacked[5],
+        "tone": unpacked[6],
+        "accent": unpacked[7],
+        "intonation": unpacked[8],
+        "audioSize": unpacked[9],
+        "audioData": unpacked[10],
+        "allocatedSize": unpacked[11],
+        "songDataSize": unpacked[12]
+    }
+
+def writeJobRaw(job,songData=None):
+    structDef = "BBBBBBBBBiIiB"
+    structSize = struct.calcsize(structDef)
+    data = struct.pack(structDef,job["status"],job["bpm"],job["stretch"],job["pitch"],job["speed"],job["quality"],job["tone"],job["accent"],job["intonation"],job["audioSize"],job["audioData"],job["allocatedSize"],job["songDataSize"])
+    emu.write_memory(audioRenderJobAddr,data)
+    if songData is not None:
+        emu.write_memory(audioRenderJobAddr+structSize,songData)
 
 def calcFileLength(bytes):
     fLen = len(bytes)
@@ -26,11 +59,63 @@ def waitForStatus(stat):
         time.sleep(0.1)
         current = emu.read_memory(audioRenderJobAddr,1)[0]
 
-def sendText(text,reset=True):
-    text=text+"\0"
+def startEmulator():
+    global emulatorProcess
+
+    # create /tmp/user directory if it doesn't exist
+    if not os.path.exists("/tmp/user"):
+        os.makedirs("/tmp/user/config")
+        with open("/config/sdl2-config.ini", "rb") as f:
+            with open("/tmp/user/config/sdl2-config.ini", "wb") as f2:
+                f2.write(f.read())
+
+    emulatorProcess = subprocess.Popen(['citra', '/opt/US.cxi'],cwd="/tmp")
+    connected = False
+    while not connected:
+        try:
+            waitForStatus(1)
+            connected = True
+        except TimeoutError:
+            pass
+
+def killEmulator():
+    global emulatorProcess
+    if emulatorProcess is not None:
+        emulatorProcess.kill()
+        emulatorProcess = None
+
+def writeJob(bpm,stretch,pitch,speed,quality,tone,accent,intonation,songData):
+    writeJobRaw({
+        "status": 1,
+        "bpm": bpm,
+        "stretch": stretch,
+        "pitch": pitch,
+        "speed": speed,
+        "quality": quality,
+        "tone": tone,
+        "accent": accent,
+        "intonation": intonation,
+        "audioSize": 0,
+        "audioData": 0,
+        "allocatedSize": 0,
+        "songDataSize": len(songData) if songData is not None else 0
+    },songData)
+
+def sendLyric(lyric,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0):
+    songData = songConverter.convertLyricParams(lyric["params"])
+    sendText(lyric["data"],reset=False,pitch=pitch,speed=speed,quality=quality,tone=tone,accent=accent,intonation=intonation,songData=songData,bpm=lyric["bpm"],stretch=lyric["stretch"])
+
+def sendText(text,reset=True,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0,songData=None,bpm=120,stretch=50):
     if reset:
-        text="\x1b\\mrk=1\\"+text
+        text=text+"\x1b\\mrk=1\\"
+
+    text = text.replace("<bleep>","\x1b\\mrk=6\\").replace("</bleep>","\x1b\\mrk=7\\")
+    text = text.replace("<echo>","\x1b\\mrk=4\\").replace("</echo>","\x1b\\mrk=5\\")
+    text=text+"\0"
     emu.write_memory(textDataAddr,text.encode('utf-8'))
+
+    writeJob(bpm,stretch,pitch,speed,quality,tone,accent,intonation,songData) # default values
+
     emu.write_memory(audioRenderJobAddr,b"\x05") # set status to 5
 
 def convertDataToMp3(data):
@@ -43,17 +128,42 @@ def convertDataToMp3(data):
 
     return data
 
-emu.write_memory(audioRenderJobAddr,b"\x01") # set status to 1
+def readDebugData():
+    debugLoc = 0x004110f0
+    debugSize = emu.read_memory(debugLoc,4)
+    debugSize = int.from_bytes(debugSize,"little")
+    debugData = emu.read_memory(debugLoc+4,debugSize)
+    text = debugData.decode('utf-16le').replace("\x1b","*")
+    print("Debug data: "+text)
 
-def generateText(text):
+def readRenderedAudio():
+    job = readJob()
+    data = emu.read_memory(job["audioData"],job["audioSize"])
+    return data
+
+def singText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0):
+    lyrics = songConverter.parseSong(text)
+    fullData=b""
+    for lyric in lyrics:
+        waitForStatus(1)
+        sendLyric(lyric,pitch=pitch,speed=speed,quality=quality,tone=tone,accent=accent,intonation=intonation)
+        waitForStatus(3)
+        #readDebugData()
+
+        data = readRenderedAudio()
+        fullData+=data
+
+        emu.write_memory(audioRenderJobAddr,b"\x01") # set status to 1
+
+    print("Length: "+str(calcFileLength(fullData))+"s")
+    return convertDataToMp3(fullData)
+
+def generateText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0):
     waitForStatus(1)
-    sendText(text)
+    sendText(text,pitch=pitch,speed=speed,quality=quality,tone=tone,accent=accent,intonation=intonation)
     waitForStatus(3)
 
-    datalen = int.from_bytes(emu.read_memory(audioRenderJobAddr+4,4),"little") # read length of data we generated
-    dataPtr = int.from_bytes(emu.read_memory(audioRenderJobAddr+8,4),"little") # read pointer to data
-
-    data = emu.read_memory(dataPtr,datalen) # read the actual data
+    data = readRenderedAudio()
 
     emu.write_memory(audioRenderJobAddr,b"\x01") # set status to 1
 

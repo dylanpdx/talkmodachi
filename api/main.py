@@ -1,8 +1,11 @@
 from flask import Flask, request, jsonify, send_file
 from io import BytesIO
 import time
-import tts
 from flask_cors import CORS
+import tts
+
+app = Flask(__name__)
+CORS(app)
 
 def formatCommandP(commandCode,param):
     commandCode = int(commandCode)
@@ -12,10 +15,6 @@ def formatCommandP(commandCode,param):
 def formatCommand(commandCode):
     commandCode = int(commandCode)
     return f"\x1b\\mrk={commandCode}\\"
-
-app = Flask(__name__)
-CORS(app)
-
 
 @app.route('/tts', methods=['POST'])
 def text_to_speech():
@@ -58,9 +57,15 @@ def text_to_speech():
     intonation = intonation - 1 # convert to 0-based index
 
     formatted_text = text
+    tts.startEmulator()
     try:
-        # Generate audio from text using the tts module
-        audio_data = tts.generateText(formatted_text, pitch, speed, quality, tone, accent, intonation)
+        audio_data = None
+        if "<lyric" not in text:
+            # Generate audio from text using the tts module
+            audio_data = tts.generateText(formatted_text, pitch, speed, quality, tone, accent, intonation)
+        else:
+            formatted_text = formatted_text.replace("\n","").replace("\t","").strip()
+            audio_data = tts.singText(formatted_text, pitch, speed, quality, tone, accent, intonation)
 
         # Create a BytesIO object to serve the audio data
         audio_buffer = BytesIO(audio_data)
@@ -76,6 +81,8 @@ def text_to_speech():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    finally:
+        tts.killEmulator()
 
 if __name__ == '__main__':
     # Run the Flask app

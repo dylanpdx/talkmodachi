@@ -14,14 +14,9 @@ enum audioStatus{
 	TEXT_READY = 5
 };
 
-enum ttsMode{
-	REGULAR,
-	RAW,
-};
-
 typedef struct{
 	volatile enum audioStatus status;
-	volatile enum ttsMode mode;
+	volatile char bpm, stretch;
 	volatile char pitch,speed,quality,tone,accent,intonation;
 	int audioSize;
 	char* audioData;
@@ -33,6 +28,8 @@ typedef struct{
 #define textDataLoc 0x00b27daa // random unused (hopefully) memory location
 audioRenderJob* audioJob = (audioRenderJob*)0x008c00e4; // other unused memory location
 
+#define debugDataLoc 0x004110f0
+
 int* ttsPtr = 0x0;
 int ttsNumber=0;
 
@@ -43,6 +40,15 @@ uint16_t* utfTo16(char* in,int* len){
 	for (int i = 0; i < inLen; i++){
 		out[i] = in[i];
 	}
+	return out;
+}
+
+char* u16toUtf(uint16_t* in,int len){
+	char* out = (char*)tmalloc(len/2+1);
+	for (int i = 0; i < len/2; i++){
+		out[i] = in[i];
+	}
+	out[len/2] = 0;
 	return out;
 }
 
@@ -58,6 +64,12 @@ int wcslen(const uint16_t* start)
 void callTTS(uint16_t* text){
 	int textSize = wcslen(text)*2;
 	ttsGlobal* ttsGlob = getTtsGlobal();
+	//RESET_TTSFunc(ttsGlob->some_tts_struct->ttsInst->effects);
+
+	// write text length to debugDataLoc
+	*(int*)debugDataLoc = textSize;
+	// write text to debugDataLoc+4
+	memcpy((void*)(debugDataLoc+4),text,textSize);
 
 	//((void(*)(ttsGlobal*))0x0039153c)(ttsGlob); // this may not be needed
 	setVoicePitchFunc(ttsGlob,audioJob->pitch);
@@ -94,7 +106,6 @@ void saveTtsSettings(int* ptr){
 	ttsNumber = ptr[1];
 
 	audioJob->status = 0;
-	audioJob->mode = REGULAR;
 	audioJob->audioSize = 0;
 	audioJob->audioData = 0x0;
 	audioJob->pitch = 50;
@@ -108,11 +119,7 @@ void saveTtsSettings(int* ptr){
 void mainLoopF(){
 	int sz = 0;
 	int* ptr = (int*)((int*)0x00acb5a4)[0];
-	singingParams* effectsDataLoc = tmalloc(0x1000);
-	uint16_t* mrkDataLoc = tmalloc(0x1000);
-
-	// zero effectsDataLoc
-	memset(effectsDataLoc,0,0x1000);
+	
 
 	audioJob->status = WAITING_FOR_TEXT;
 	while(true){
@@ -127,18 +134,27 @@ void mainLoopF(){
 			if (audioJob->songDataSize == 0){
 				callTTS(text);
 			}else{
+				singingParams* effectsDataLoc = tmalloc(0x1000);
+				uint16_t* mrkDataLoc = tmalloc(0x1000);
+				// zero effectsDataLoc
+				memset(effectsDataLoc,0,0x1000);
+
 				setupSingingParamsFunc(effectsDataLoc);
-				int bpm = 73;
+				int bpm = audioJob->bpm;
+				int stretch = audioJob->stretch;
 				msbtToTextFunc((void*)ptr[4],(char*)textDataLoc,&sz,0x200,(short*)((char*)&audioJob->songData-1),audioJob->songDataSize);
-				textToEffectsFunc((int*)effectsDataLoc,(char*)textDataLoc,sz*2,0x18,0); // outputs @ outputvar+0x228
+				textToEffectsFunc((int*)effectsDataLoc,(char*)textDataLoc,sz*2,stretch,0); // outputs @ outputvar+0x228
 				repairSingingParamsFunc(effectsDataLoc,0);
 
 				effectsDataLoc->bpm = bpm*2;
-				effectsDataLoc->field4_0x210 = 2; // root note
+				effectsDataLoc->field4_0x210 = 1; // root note
 
-				
 				generateMrkFunc((char*)mrkDataLoc,0x1800,(char*)text,(uint16_t*)effectsDataLoc,0x30FD,0,0);
+				
 				callTTS(mrkDataLoc);
+
+				tfree(effectsDataLoc);
+				tfree(mrkDataLoc);
 			}
 
 			tfree(text);
