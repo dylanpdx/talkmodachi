@@ -65,8 +65,8 @@ COPY *.py /app
 
 COPY --from=builder /src/build/bin/Release /usr/local/bin
 
-RUN mkdir /root/.config && mkdir /root/.config/citra-emu
-COPY sdl2-config.ini /root/.config/citra-emu/sdl2-config.ini
+RUN mkdir /config
+COPY sdl2-config.ini /config/sdl2-config.ini
 
 # Set runtime interface client as default command for the container runtime
 ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
