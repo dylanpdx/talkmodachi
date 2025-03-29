@@ -67,9 +67,9 @@ void callTTS(uint16_t* text){
 	//RESET_TTSFunc(ttsGlob->some_tts_struct->ttsInst->effects);
 
 	// write text length to debugDataLoc
-	*(int*)debugDataLoc = textSize;
+	//*(int*)debugDataLoc = textSize;
 	// write text to debugDataLoc+4
-	memcpy((void*)(debugDataLoc+4),text,textSize);
+	//memcpy((void*)(debugDataLoc+4),text,textSize);
 
 	//((void(*)(ttsGlobal*))0x0039153c)(ttsGlob); // this may not be needed
 	setVoicePitchFunc(ttsGlob,audioJob->pitch);
