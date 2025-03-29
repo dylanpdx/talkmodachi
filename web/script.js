@@ -162,3 +162,13 @@ function togglePlay() {
 		audioPlayer.pause()
 	}
 }
+
+// Randomize all voice parameters
+function randomizeVoiceParameters() {
+	for (const key in sliders) {
+		if (sliders.hasOwnProperty(key)) {
+			const slider = sliders[key];
+			slider.value = Math.random() * (slider.max - slider.min) + slider.min;
+		}
+	}
+}
