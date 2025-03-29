@@ -1,5 +1,8 @@
 import citra
 import time
+import utils
+
+citra.CITRA_PORT = utils.findFreePort()
 emu = citra.Citra()
 from pydub import AudioSegment
 import songConverter
@@ -69,7 +72,7 @@ def startEmulator():
             with open("/tmp/user/config/sdl2-config.ini", "wb") as f2:
                 f2.write(f.read())
 
-    emulatorProcess = subprocess.Popen(['citra', '/opt/US.cxi'],cwd="/tmp")
+    emulatorProcess = subprocess.Popen(['citra', '/opt/US.cxi', '-u',str(citra.CITRA_PORT)],cwd="/tmp")
     connected = False
     while not connected:
         try:
@@ -82,6 +85,7 @@ def killEmulator():
     global emulatorProcess
     if emulatorProcess is not None:
         emulatorProcess.kill()
+        emulatorProcess.wait()
         emulatorProcess = None
 
 def writeJob(bpm,stretch,pitch,speed,quality,tone,accent,intonation,songData):
