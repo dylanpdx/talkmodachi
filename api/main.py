@@ -57,7 +57,8 @@ def text_to_speech():
     intonation = intonation - 1 # convert to 0-based index
 
     formatted_text = text
-    tts.startEmulator()
+    if __name__ != '__main__':
+        tts.startEmulator()
     try:
         audio_data = None
         if "<lyric" not in text:
@@ -82,7 +83,8 @@ def text_to_speech():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
-        tts.killEmulator()
+        if __name__ != '__main__':
+            tts.killEmulator()
 
 if __name__ == '__main__':
     # Run the Flask app
