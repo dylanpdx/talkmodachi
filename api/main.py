@@ -16,12 +16,12 @@ def formatCommand(commandCode):
     commandCode = int(commandCode)
     return f"\x1b\\mrk={commandCode}\\"
 
-@app.route('/tts', methods=['POST'])
+@app.route('/tts', methods=['GET'])
 def text_to_speech():
     """
     API endpoint that converts text to speech.
     
-    Expected JSON payload:
+    Expected query parameters:
     {
         "text": "Text to convert to speech",
         "pitch": 50,         # Optional: 0 to 100
@@ -35,9 +35,17 @@ def text_to_speech():
     Returns:
     - Audio file in WAV format
     """
-    data = request.get_json()
+    data = {
+        'text': request.args.get('text', None),
+        'pitch': request.args.get('pitch', 50),
+        'speed': request.args.get('speed', 50),
+        'quality': request.args.get('quality', 50),
+        'tone': request.args.get('tone', 50),
+        'accent': request.args.get('accent', 50),
+        'intonation': request.args.get('intonation', 1)
+    }
     
-    if not data or 'text' not in data:
+    if not data or 'text' not in data or data['text'] is None:
         return jsonify({'error': 'Missing text parameter'}), 400
     if len(data['text']) > 500:
         return jsonify({'error': 'Text too long'}), 400

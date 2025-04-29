@@ -110,12 +110,12 @@ function generateSpeech() {
 	status.innerText = 'Generating speech...';
 	
 	// Call API
-	fetch(apiUrl, {
-		method: 'POST',
+	params=new URLSearchParams(requestData).toString();
+	fetch(apiUrl+"?"+params, {
+		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
 		},
-		body: JSON.stringify(requestData),
 	})
 	.then(response => {
 		if (!response.ok) {
