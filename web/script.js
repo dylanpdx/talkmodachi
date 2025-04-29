@@ -146,14 +146,6 @@ function generateSpeech() {
 	});
 }
 
-// Enter generates
-textInput.addEventListener('keydown', function(event) {
-	if (event.key === 'Enter' && !event.shiftKey) {
-		event.preventDefault();
-		generateSpeech();
-	}
-});
-
 // Toggle playback with button
 function togglePlay() {
 	if (audioPlayer.paused) {
