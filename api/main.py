@@ -39,7 +39,8 @@ def text_to_speech():
     
     if not data or 'text' not in data:
         return jsonify({'error': 'Missing text parameter'}), 400
-    
+    if len(data['text']) > 500:
+        return jsonify({'error': 'Text too long'}), 400
     text = data['text'].replace('\n', '')
     
     # Extract voice parameters (with defaults if not provided)
