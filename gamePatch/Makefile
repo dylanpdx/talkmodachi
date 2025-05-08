@@ -46,7 +46,31 @@ CFLAGS	:=	-g -Wall -O2 -mword-relocations \
 			-fomit-frame-pointer -ffunction-sections \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -D__3DS__
+ifndef REGION
+#---------------------------------------------------------------------------------
+# Determine REGION flag based on the hash of code.bin
+#---------------------------------------------------------------------------------
+CODE_BIN := $(if $(wildcard bak/code.bin),bak/code.bin,$(if $(wildcard /code.bin),/code.bin,))
+ifeq ($(CODE_BIN),)
+$(error "Neither bak/code.bin nor /code.bin exists. $(CURDIR)")
+endif
+
+REGION := UNK
+
+SHA1_HASH := $(shell sha1sum $(CODE_BIN) | cut -d' ' -f1)
+
+ifeq ($(SHA1_HASH),27cd9e76126b4e07bd6bcf43796e4988a178de87)
+REGION := US
+else ifeq ($(SHA1_HASH),000000000000000000000000000000000)
+REGION := EU
+else ifeq ($(SHA1_HASH),000000000000000000000000000000000)
+REGION := KR
+else
+$(error "Unknown hash for $(CODE_BIN): $(SHA1_HASH)")
+endif
+endif
+
+CFLAGS	+=	$(INCLUDE) -D__3DS__ -DREGION_$(REGION)
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
@@ -102,12 +126,12 @@ export LIBPATHS	:=	-L$(DEVKITARM)/arm-none-eabi/lib/armv6k/fpu $(foreach dir,$(L
 #---------------------------------------------------------------------------------
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
- 
+	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile REGION=$(REGION)
+
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(LINKERSCRIPT) $(TARGET).elf $(TARGET).bin $(TARGET).sym
+	@rm -fr $(BUILD) $(LINKERSCRIPT) $(TARGET).elf $(TARGET).bin $(TARGET).sym source/main.hks
 
 #---------------------------------------------------------------------------------
 else
@@ -151,8 +175,24 @@ export LINKERSCRIPT_TEMPLATE
 
 
 
-all: $(OUTPUT).bin $(OUTPUT).sym
-	
+all: copy_hooks $(OUTPUT).bin $(OUTPUT).sym
+
+#---------------------------------------------------------------------------------
+# Copy the appropriate hooks file based on REGION
+#---------------------------------------------------------------------------------
+HOOKS_FILE := ../hooks/main_$(REGION).rhks
+TARGET_HOOKS := ../source/main.hks
+
+.PHONY: copy_hooks
+
+copy_hooks:
+	@if [ ! -f $(HOOKS_FILE) ]; then \
+		echo "Error: $(HOOKS_FILE) does not exist."; \
+		exit 1; \
+	fi
+	@echo "Copying $(HOOKS_FILE) to $(TARGET_HOOKS)..."
+	@cp "$(HOOKS_FILE)" "$(TARGET_HOOKS)"
+
 $(OUTPUT).bin : $(OUTPUT).elf
 	$(OBJCOPY) -O binary $< $@
 	@echo built ... $(notdir $@)

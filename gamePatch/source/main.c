@@ -118,7 +118,7 @@ void saveTtsSettings(int* ptr){
 
 void mainLoopF(){
 	int sz = 0;
-	int* ptr = (int*)((int*)0x00acb5a4)[0];
+	int* ptr = (int*)((int*)ADDR_unknown_ptr)[0];
 	
 
 	audioJob->status = WAITING_FOR_TEXT;
