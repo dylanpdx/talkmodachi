@@ -16,6 +16,9 @@ def formatCommand(commandCode):
     commandCode = int(commandCode)
     return f"\x1b\\mrk={commandCode}\\"
 
+if __name__ != '__main__' and tts.keepEmu:
+    tts.startEmulator()
+
 @app.route('/tts', methods=['GET'])
 def text_to_speech():
     """

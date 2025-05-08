@@ -23,6 +23,8 @@ audioRenderJobAddr=0x008c00e4
 textDataAddr=0x00b27daa
 emulatorProcess = None
 
+keepEmu = os.getenv("KEEP_EMU", "0") == "1"
+
 def readJob():
     structDef = "BBBBBBBBBiIiB"
     structSize = struct.calcsize(structDef)
@@ -65,6 +67,9 @@ def waitForStatus(stat):
 def startEmulator():
     global emulatorProcess
 
+    if keepEmu and emulatorProcess is not None:
+        return
+
     # create /tmp/user directory if it doesn't exist
     if not os.path.exists("/tmp/user"):
         os.makedirs("/tmp/user/config")
@@ -83,6 +88,8 @@ def startEmulator():
 
 def killEmulator():
     global emulatorProcess
+    if keepEmu:
+        return
     if emulatorProcess is not None:
         emulatorProcess.kill()
         emulatorProcess.wait()

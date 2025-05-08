@@ -9,3 +9,5 @@ services:
     restart: "unless-stopped"
     volumes:
       - ./US_patched.cxi:/opt/US.cxi
+    environment:
+      - KEEP_EMU=1 # Keep emulator running after voice command - Makes generation faster but WILL result in voice glitches until the reset commands are reverse engineered
