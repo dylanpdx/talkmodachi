@@ -76,6 +76,22 @@ body {
 			padding: .5em;
 			transition: .1s all;
 		}
+
+		#savedVoices{
+			--background: #fff;
+			--border: #fc7;
+			--shadow: #fed;
+			background: var(--background);
+			border: 2px solid var(--border);
+			border-radius: 1ch;
+			box-shadow:
+				inset 0 3px var(--shadow),
+				inset 3px 0 var(--shadow),
+				inset -3px 0 var(--shadow);
+			font-size: 16px;
+			padding: .5em;
+			transition: .1s all;
+		}
 		
 			textarea.textBox {
 				max-width: 80ch;
@@ -289,7 +305,42 @@ body {
 				}
 			}
 		}
+
+		dialog:is([open]){
+			background: #ffe7a4;
+			border-radius: 8px;
+			box-shadow: 0 0 0 3px rgba(0, 0, 0, 1);
+			border-color: #fff;
+			border-width: 10px;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			padding: 20px;
+			position: fixed;
+			top: 50%;
+			width: 20%;
+			z-index: 4;
+
+			.voiceslist{
+				.voice{
+					background:#00000011;
+					border-radius: 8px;
+					margin-bottom: .5em;
+					padding: 1%;
+					width: 100%;
+
+					.voiceElem{
+						vertical-align: middle;
+					}
+					button.voiceElem{
+						float:right;
+					}
+				}
+			}
+		}
 	}
+
+
 	
 	footer {
 		display: flex;

@@ -70,6 +70,22 @@
                 <div class="buttonContainer">
                     <button id="randomize" class="yellow" onclick="randomizeVoiceParameters()">Randomize</button>
                 </div>
+                <div>
+                    <!-- Language selection -->
+                </div>
+                <label for="accentSlider" class="control">
+                    <label class="pill">Presets</label>
+                    <select id="savedVoices">
+                        <option value="" disabled selected>-</option>
+                        <option value="default:youngm">Young Man</option>
+                        <option value="default:youngf">Young Woman</option>
+                        <option value="default:adultm">Adult Man</option>
+                        <option value="default:adultf">Adult Woman</option>
+                        <option value="default:oldm">Old Man</option>
+                        <option value="default:oldf">Old Woman</option>
+                    </select>
+                    <button class="yellow" id="manageVoicesBtn" onclick="toggleManageVoices();">Manage Presets</button>
+                </label>
             </section>
             
             <div class="buttonContainer">
@@ -89,6 +105,15 @@
                 <a id="downloadButton" class='yellow button'>Download</a>
             </div>
         </section>
+        <dialog id="manageVoicesDialog">
+            <h2 class="pill">Manage Voices</h2>
+            <div class="voiceslist" id="manageVoicesList">
+                <!-- Will be populated -->
+            </div>
+            <input type="file" id="savefileload" style="display:none">
+            <button onclick="loadSave()">Load from Save</button>
+            <button class="yellow" id="manageVoicesBtn" onclick="toggleManageVoices();">Close</button>
+        </dialog>
     </main>
     
     <footer>
@@ -104,7 +129,10 @@
     <input type="file" id="myfile" name="myfile">
     <button id="upload" onclick="upload()">Upload</button>
     -->
+    <script src="simple-ver3storedata-studio-from-c.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bytebuffer@5.0.1/dist/bytebuffer.min.js"></script>
     <script src="script.js"></script>
+    <script src="savefile.js"></script>
     <!--
     <script src="/assets/load.js"></script>
     <script type="module" src="vm.js"></script>
