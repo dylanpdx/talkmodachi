@@ -103,6 +103,35 @@ function toggleManageVoices() {
 	}
 }
 
+function savePreset(){
+	// ask for preset name
+	const presetName = prompt("Enter a name for the preset:");
+	if (!presetName)
+		return; // User cancelled
+	const voiceParams = getVoiceParameters();
+	// hash the voice parameters to create a unique ID
+	let voiceId = 0;
+	for (const key in voiceParams) {
+		if (voiceParams.hasOwnProperty(key)) {
+			voiceId = (voiceId << 5) ^ voiceParams[key];
+		}
+	}
+	const presetVoice = {
+		name: presetName,
+		voice: voiceParams,
+		id: voiceId,
+	};
+
+	// add to voices
+    let voices = loadVoices();
+    // remove any existing Miis with the same ID
+    voices = voices.filter(voice => voice.id != null && voice.id != presetVoice.id);
+    // add the new voice
+    voices = voices.concat([presetVoice]);
+    saveVoices(voices);
+    populateManageVoices();
+}
+
 
 voicesSelect.addEventListener('change', function() {
 	const selectedVoice = voicesSelect.value;

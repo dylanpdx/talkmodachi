@@ -67,7 +67,8 @@ function getMiis(data,isJP){ // ArrayBuffer
     // add to voices
     let voices = loadVoices();
     // remove any existing Miis with the same ID
-    voices = voices.filter(voice => voice.id != null && voice.id != miiId);
+    const miiIds = miis.map(m => m.id);
+    voices = voices.filter(voice => voice.id == null || !miiIds.includes(voice.id));
     // add the new Mii
     voices = voices.concat(miis);
     saveVoices(voices);
