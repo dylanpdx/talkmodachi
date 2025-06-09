@@ -1,8 +1,10 @@
 #include "mem.h"
 #include <string.h>
 
+#ifdef REGION_US
 #define MALLOC_ADDR 0x00129778
 #define FREE_ADDR 0x0011da30
+#endif
 
 void* tmalloc(int size){
     void* ptr = ((void*(*)(int))MALLOC_ADDR)(size);
