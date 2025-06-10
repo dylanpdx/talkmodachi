@@ -4,6 +4,12 @@
 #ifdef REGION_US
 #define MALLOC_ADDR 0x00129778
 #define FREE_ADDR 0x0011da30
+#elif REGION_EU
+#define MALLOC_ADDR 0x00129824
+#define FREE_ADDR 0x0011dadc
+#elif REGION_KR
+#define MALLOC_ADDR 0x0012974c
+#define FREE_ADDR 0x0011d9e8
 #endif
 
 void* tmalloc(int size){
