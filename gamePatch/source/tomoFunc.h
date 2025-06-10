@@ -20,6 +20,26 @@
 #define ADDR_setupSingingParams 0x00741654
 #define ADDR_repairSingingParams 0x00744bd0
 #define ADDR_RESET_TTS 0x001be020
+#elif REGION_EU
+#define ADDR_unknown_ptr 0x00acd5a4 // TODO: verify this address
+#define ADDR_ttsGlobal 0x00acb54c
+#define ADDR_setupFunc 0x00391788
+#define ADDR_doTTS 0x00191ef0
+#define ADDR_msbtToText 0x003d3c9c
+#define ADDR_textToEffects 0x00744ecc
+#define ADDR_generateMrk 0x007420c8
+#define ADDR_getIsMouthOpenAtSampleTime 0x00744740
+#define ADDR_setVoicePitch 0x0039159c
+#define ADDR_setVoiceSpeed 0x003915ac
+#define ADDR_setVoiceQuality 0x0039158c
+#define ADDR_setVoiceTone 0x003915dc
+#define ADDR_setVoiceAccent 0x003915bc
+#define ADDR_setVoiceIntonation 0x003915cc
+#define ADDR_setupSingingParams 0x0074223c
+#define ADDR_repairSingingParams 0x007457b8
+#define ADDR_RESET_TTS 0x001be0d0
+#elif REGION_KR
+
 #endif
 
 typedef struct {
