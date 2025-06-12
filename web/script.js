@@ -10,6 +10,7 @@ const voicesSelect = document.getElementById('savedVoices');
 const manageVoicesList = document.getElementById('manageVoicesList');
 const manageVoicesDialog = document.getElementById('manageVoicesDialog');
 const manageVoicesBtn = document.getElementById('manageVoicesBtn');
+const voiceLanguageSelect = document.getElementById('languageSelect');
 
 const presetVoices = {
 	youngm:{accent: 25,intonation: 0,pitch: 60,quality: 72,speed: 59,tone: 25},
@@ -156,7 +157,8 @@ function getVoiceParameters() {
 		quality: parseFloat(sliders.quality.value),
 		tone: parseFloat(sliders.tone.value),
 		accent: parseFloat(sliders.accent.value),
-		intonation: document.querySelector('input[type=radio][name=intonation]:checked').value
+		intonation: document.querySelector('input[type=radio][name=intonation]:checked').value,
+		lang: voiceLanguageSelect.value
 	};
 }
 
