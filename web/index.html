@@ -19,60 +19,73 @@
             <textarea id="textInput" class="textBox" placeholder="Enter the text you want to convert to speech..." rows=5 title="Text Input" maxlength="2000"></textarea>
 
             <section class="controls-container" id="controlsContainer" hidden="true">
-                <h2 class="pill">Voice Parameters</h2>
-                
-                <label for="pitchSlider" class="control">
-                    <span class="pill">Pitch</span>
-                    <input type="range" min="0" max="100" step="1" value="50" class="slider" id="pitchSlider">
-                </label>
-                
-                <label for="speedSlider" class="control">
-                    <span class="pill">Speed</span>
-                    <input type="range" min="0" max="100" step="1" value="50" class="slider" id="speedSlider">
-                </label>
-                
-                <label for="qualitySlider" class="control">
-                    <span class="pill">Quality</span>
-                    <input type="range" min="0" max="100" step="1" value="50" class="slider" id="qualitySlider">
-                </label>
-                
-                <label for="toneSlider" class="control">
-                    <span class="pill">Tone</span>
-                    <input type="range" min="0" max="100" step="1" value="50" class="slider" id="toneSlider">
-                </label>
-                
-                <label for="accentSlider" class="control">
-                    <span class="pill">Accent</span>
-                    <input type="range" min="0" max="100" step="1" value="50" class="slider" id="accentSlider">
-                </label>
-                
-                <label for="intonation" class="control">
-                    <label class="pill">Intonation</label>
-                    <div id="intonation">
-                        <label class="yellow button">
-                            <input type="radio" name="intonation" value="1" aria-label="Intonation 1" checked>
-                            <span>1</span>
-                        </label>
-                        <label class="yellow button">
-                            <input type="radio" name="intonation" value="2" aria-label="Intonation 2">
-                            <span>2</span>
-                        </label>
-                        <label class="yellow button">
-                            <input type="radio" name="intonation" value="3" aria-label="Intonation 3">
-                            <span>3</span>
-                        </label>
-                        <label class="yellow button">
-                            <input type="radio" name="intonation" value="4" aria-label="Intonation 4">
-                            <span>4</span>
-                        </label>
-                    </div>
-                </label>
+                <div class="twocol">
+                    <h2 class="pill">Voice Parameters</h2>
+                    
+                    <label for="pitchSlider" class="control">
+                        <span class="pill">Pitch</span>
+                        <input type="range" min="0" max="100" step="1" value="50" class="slider" id="pitchSlider">
+                    </label>
+                    
+                    <label for="speedSlider" class="control">
+                        <span class="pill">Speed</span>
+                        <input type="range" min="0" max="100" step="1" value="50" class="slider" id="speedSlider">
+                    </label>
+                    
+                    <label for="qualitySlider" class="control">
+                        <span class="pill">Quality</span>
+                        <input type="range" min="0" max="100" step="1" value="50" class="slider" id="qualitySlider">
+                    </label>
+                    
+                    <label for="toneSlider" class="control">
+                        <span class="pill">Tone</span>
+                        <input type="range" min="0" max="100" step="1" value="50" class="slider" id="toneSlider">
+                    </label>
+                    
+                    <label for="accentSlider" class="control">
+                        <span class="pill">Accent</span>
+                        <input type="range" min="0" max="100" step="1" value="50" class="slider" id="accentSlider">
+                    </label>
+                    
+                    <label for="intonation" class="control">
+                        <label class="pill">Intonation</label>
+                        <div id="intonation">
+                            <label class="yellow button">
+                                <input type="radio" name="intonation" value="1" aria-label="Intonation 1" checked>
+                                <span>1</span>
+                            </label>
+                            <label class="yellow button">
+                                <input type="radio" name="intonation" value="2" aria-label="Intonation 2">
+                                <span>2</span>
+                            </label>
+                            <label class="yellow button">
+                                <input type="radio" name="intonation" value="3" aria-label="Intonation 3">
+                                <span>3</span>
+                            </label>
+                            <label class="yellow button">
+                                <input type="radio" name="intonation" value="4" aria-label="Intonation 4">
+                                <span>4</span>
+                            </label>
+                        </div>
+                    </label>
+                </div>
                 <div class="buttonContainer">
                     <button id="randomize" class="yellow" onclick="randomizeVoiceParameters()">Randomize</button>
                 </div>
-                <div>
-                    <!-- Language selection -->
-                </div>
+                <label for="voicetype" class="control">
+                    <label class="pill">Voice</label>
+                    <div id="voicetype">
+                        <select id="languageSelect">
+                            <option value="useng">🇺🇸 US English</option>
+                            <option disabled value="eueng">🇪🇺 EU English</option>
+                            <option disabled value="es">🇪🇸 Spanish</option>
+                            <option disabled value="de">🇩🇪 German</option>
+                            <option disabled value="fr">🇫🇷 French</option>
+                            <option disabled value="it">🇮🇹 Italian</option>
+                            <option disabled value="nl">🇳🇱 Dutch</option>
+                        </select>
+                    </div>
+                </label>
                 <label for="accentSlider" class="control">
                     <label class="pill">Presets</label>
                     <select id="savedVoices">
@@ -84,21 +97,11 @@
                         <option value="default:oldm">Old Man</option>
                         <option value="default:oldf">Old Woman</option>
                     </select>
-                    <button class="yellow" id="manageVoicesBtn" onclick="toggleManageVoices();">Manage Presets</button>
-                    <button class="yellow" id="manageVoicesBtn" onclick="savePreset();">Save new Preset</button>
-                <label for="voicetype" class="control">
-                    <label class="pill">Voice</label>
-                    <div id="voicetype">
-                        <select>
-                            <option value="useng">🇺🇸 US English</option>
-                            <option disabled value="eueng">🇪🇺 EU English</option>
-                            <option disabled value="es">🇪🇸 Spanish</option>
-                            <option disabled value="de">🇩🇪 German</option>
-                            <option disabled value="fr">🇫🇷 French</option>
-                            <option disabled value="it">🇮🇹 Italian</option>
-                            <option disabled value="nl">🇳🇱 Dutch</option>
-                        </select>
+                    <div class="buttonContainer">
+                        <button class="yellow" id="manageVoicesBtn" onclick="toggleManageVoices();">Manage Presets</button>
+                        <button class="yellow" id="manageVoicesBtn" onclick="savePreset();">Save new Preset</button>
                     </div>
+                    <hr>
                 </label>
             </section>
             
@@ -125,8 +128,11 @@
                 <!-- Will be populated -->
             </div>
             <input type="file" id="savefileload" style="display:none">
-            <button onclick="loadSave()">Load from Save</button>
-            <button class="yellow" id="manageVoicesBtn" onclick="toggleManageVoices();">Close</button>
+            <div class="buttonContainer">
+                <button onclick="loadSave()">Load from Save</button>
+                <button class="yellow" id="manageVoicesBtn" onclick="toggleManageVoices();">Close</button>
+            </div>
+
         </dialog>
     </main>
     
