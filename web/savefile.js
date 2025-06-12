@@ -52,7 +52,8 @@ function getMiis(data,isJP){ // ArrayBuffer
         }
         const miiStudioData = ver3StoreDataToStudioURLData(new Uint8Array(miiData));
         const miiStudioDataHex = bytesToHex(miiStudioData);
-        const miiUrl = `https://studio.mii.nintendo.com/miis/image.png?data=${miiStudioDataHex}&type=face&expression=normal&width=270&bgColor=FFFFFF00&clothesColor=default&cameraXRotate=0&cameraYRotate=0&cameraZRotate=0&characterXRotate=0&characterYRotate=0&characterZRotate=0&lightDirectionMode=none&instanceCount=1&instanceRotationMode=model`
+        // proxy for https://studio.mii.nintendo.com/miis/image.png
+        const miiUrl = `/mii?data=${miiStudioDataHex}&type=face&expression=normal&width=270&bgColor=FFFFFF00&clothesColor=default&cameraXRotate=0&cameraYRotate=0&cameraZRotate=0&characterXRotate=0&characterYRotate=0&characterZRotate=0&lightDirectionMode=none&instanceCount=1&instanceRotationMode=model`
 
         const xmii = {
             name: nickname,
