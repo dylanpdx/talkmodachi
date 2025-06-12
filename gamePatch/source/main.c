@@ -64,7 +64,7 @@ int wcslen(const uint16_t* start)
 void callTTS(uint16_t* text){
 	int textSize = wcslen(text)*2;
 	ttsGlobal* ttsGlob = getTtsGlobal();
-	//RESET_TTSFunc(ttsGlob->some_tts_struct->ttsInst->effects);
+	RESET_TTSFunc(ttsGlob->mainTtsClass->effects);
 
 	// write text length to debugDataLoc
 	//*(int*)debugDataLoc = textSize;
@@ -118,7 +118,7 @@ void saveTtsSettings(int* ptr){
 
 void mainLoopF(){
 	int sz = 0;
-	int* ptr = (int*)((int*)0x00acb5a4)[0];
+	int* ptr = (int*)((int*)ADDR_unknown_ptr)[0];
 	
 
 	audioJob->status = WAITING_FOR_TEXT;

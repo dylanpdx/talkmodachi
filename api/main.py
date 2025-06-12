@@ -1,7 +1,11 @@
 from flask import Flask, request, jsonify, send_file
 from io import BytesIO
-import time
+import citra,utils
 from flask_cors import CORS
+
+if __name__ != '__main__':
+    citra.CITRA_PORT = utils.findFreePort()
+
 import tts
 
 app = Flask(__name__)
