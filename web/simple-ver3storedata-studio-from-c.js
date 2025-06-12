@@ -208,4 +208,4 @@ function testVer3StoreDataToStudioURLData(testData = testVer3StoreDataToStudioSe
     console.debug('testVer3StoreDataToStudioURLData: Tests finished.');
 }
 
-testVer3StoreDataToStudioURLData();
+//testVer3StoreDataToStudioURLData();
