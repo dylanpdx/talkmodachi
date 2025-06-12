@@ -2,7 +2,6 @@ import citra
 import time
 import utils
 
-citra.CITRA_PORT = utils.findFreePort()
 emu = citra.Citra()
 from pydub import AudioSegment
 import songConverter

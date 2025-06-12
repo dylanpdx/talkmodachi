@@ -2,9 +2,13 @@ import struct
 import random
 import enum
 import socket
+custom_citra = True
 
 CURRENT_REQUEST_VERSION = 1
-MAX_REQUEST_DATA_SIZE = 1024 # This requires a custom Citra build
+if custom_citra:
+    MAX_REQUEST_DATA_SIZE = 1024 # This requires a custom Citra build
+else:
+    MAX_REQUEST_DATA_SIZE = 32
 MAX_PACKET_SIZE = 16+MAX_REQUEST_DATA_SIZE
 
 class RequestType(enum.IntEnum):
