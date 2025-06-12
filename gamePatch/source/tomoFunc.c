@@ -8,5 +8,5 @@ void setupTTS(){
 }
 
 ttsGlobal* getTtsGlobal(){
-    return *((ttsGlobal**)ADDR_ttsGlobal);
+    return (ttsGlobal*)ADDR_ttsGlobal;
 }
