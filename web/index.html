@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Talkmodachi - Text to Speech Generator</title>
-    <link rel="stylesheet" type="text/scss" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
     <!--<link rel="stylesheet" href="/assets/vendor/xterm.css">-->
-    <script>
-        // https://github.com/nicolasdejong/ncss
-        ["text/ncss","text/scss"].forEach(e=>{document.querySelectorAll(`style[type="${e}"],link[type="${e}"]`).forEach(e=>{let t=document.createElementNS(e.namespaceURI,"style");t.type="text/css",t.textContent=(e=>{const t=[],s=[],n=/^@/;return e.replace(/(['"])(.*?[^\\])?\1/g,e=>"==:Q:=="+s.push(e)).replace(/<!\[CDATA\[([\s\S]*)]]>/g,"$1").replace(/\/\*[\s\S]*?\*\//g,"").replace(/\/\/[^\n]*/g,"").replace(/([\s\S]*?)\s*([;{}]|$)/g,(e,s,n)=>t.push.apply(t,[s,n].map(e=>e.trim()).filter(e=>e))),function e(s,l,p){const r=l[0].includes("%");s.push([l,p]);for(let c=";";c&&("}"!==c||r);c=t.shift())if("{"!==t[0]||r)";"!==c&&p.push(c+(r&&/[{}%]/.test(c)?"":";"));else if(t.shift(),n.test(c)){const t=[],n=c+" {";e(s,[n],t)}else{let t=[];c.split(/\s*,\s*/).forEach(e=>l.forEach(s=>t.push(e.includes("&")?e.replace(/^(.*)&/,(e,t)=>t?t+" "+s:s):s+" "+e))),e(s,t,[])}return n.test(l[0])&&!r&&p.length&&p.push("}"),r&&p.pop(),s}([],[""],[]).filter(([e,t])=>t[0]).map(([e,t])=>e+(e[0]?` { ${t.join(" ")} }`:t.join("\n")).replace(/ ;/g,";")).join("\n").replace(/ {2,}/g," ").replace(/[ \n]*\n */g,"\n").replace(/==:Q:==(\d+)/g,(e,t)=>s[t-1])})(e.textContent||(e=>{let t=new XMLHttpRequest;return t.open("GET",e.href,!1),t.send(),t.responseText||""})(e)),e.media&&t.setAttribute("media",e.media),e.parentNode.replaceChild(t,e)})});
-    </script>
 </head>
 <body>
     <header>
