@@ -17,7 +17,7 @@ typedef struct {
 
 typedef struct {
     PADDING(0x0,0x7);
-    ttsClass *some_tts_struct;
+    ttsClass *mainTtsClass;
     undefined field9_0xc;
     undefined field10_0xd;
 } ttsGlobal; // ingame size: 0x14

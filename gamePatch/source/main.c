@@ -64,7 +64,7 @@ int wcslen(const uint16_t* start)
 void callTTS(uint16_t* text){
 	int textSize = wcslen(text)*2;
 	ttsGlobal* ttsGlob = getTtsGlobal();
-	RESET_TTSFunc(ttsGlob->some_tts_struct->effects);
+	RESET_TTSFunc(ttsGlob->mainTtsClass->effects);
 
 	// write text length to debugDataLoc
 	//*(int*)debugDataLoc = textSize;
