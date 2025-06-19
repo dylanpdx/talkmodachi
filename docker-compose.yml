@@ -9,3 +9,5 @@ services:
     restart: "unless-stopped"
     volumes:
       - ./US_patched.cxi:/opt/US.cxi
+      - ./EU_patched.cxi:/opt/EU.cxi
+      - ./KR_patched.cxi:/opt/KR.cxi
