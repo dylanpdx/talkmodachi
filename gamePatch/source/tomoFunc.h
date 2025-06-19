@@ -22,7 +22,7 @@
 #define ADDR_RESET_TTS 0x001be020
 #elif REGION_EU
 #define ADDR_unknown_ptr 0x00acd5a4 // TODO: verify this address
-#define ADDR_ttsGlobal 0x00acb54c
+#define ADDR_ttsGlobal 0x00acd54c
 #define ADDR_setupFunc 0x00391788
 #define ADDR_doTTS 0x00191ef0
 #define ADDR_msbtToText 0x003d3c9c

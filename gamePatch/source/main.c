@@ -26,7 +26,7 @@ typedef struct{
 } audioRenderJob;
 
 #define textDataLoc 0x00b27daa // random unused (hopefully) memory location
-audioRenderJob* audioJob = (audioRenderJob*)0x008c00e4; // other unused memory location
+audioRenderJob* audioJob = (audioRenderJob*)0x00af340d; // other unused memory location
 
 #define debugDataLoc 0x004110f0
 

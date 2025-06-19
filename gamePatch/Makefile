@@ -59,8 +59,10 @@ REGION := UNK
 
 SHA1_HASH := $(shell sha1sum $(CODE_BIN) | cut -d' ' -f1)
 
+#US
 ifeq ($(SHA1_HASH),27cd9e76126b4e07bd6bcf43796e4988a178de87)
 REGION := US
+#EU
 else ifeq ($(SHA1_HASH),8a63cdd2020b1422beedc20372659ebbfe5da09d)
 REGION := EU
 else ifeq ($(SHA1_HASH),a0488d72592c4572db5f52f608f60fff062fca1c)

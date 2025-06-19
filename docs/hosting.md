@@ -16,6 +16,12 @@ First, extract the code.bin and exheader.bin from your cxi file. If you're using
 3dstool -xvtf exefs .\\exefs --exefs-dir exefsd --header exfsheader
 ```
 
+You may need to decompress your code.bin:
+```sh
+3dstool -u --file .\exefsd\code.bin --compress-type blz --compress-out .\exefsd\code_unc.bin
+```
+And then remove code.bin, then rename code_unc.bin to code.bin
+
 Place the code.bin (from exefsd folder) and exheader.bin in the gamePatch folder, and open that folder with Magikoopa, then press the build button.
 
 Once built, the code.bin and exheader.bin should now be patched, and can be moved back to where they were extracted from. The CXI needs to be rebuilt now.

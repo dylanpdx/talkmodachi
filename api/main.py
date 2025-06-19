@@ -46,7 +46,8 @@ def text_to_speech():
         'quality': request.args.get('quality', 50),
         'tone': request.args.get('tone', 50),
         'accent': request.args.get('accent', 50),
-        'intonation': request.args.get('intonation', 1)
+        'intonation': request.args.get('intonation', 1),
+        'lang': request.args.get('lang', 'useng')  # Default to US English
     }
     
     if not data or 'text' not in data or data['text'] is None:
@@ -69,9 +70,13 @@ def text_to_speech():
         return jsonify({'error': 'Invalid parameter values'}), 400
     intonation = intonation - 1 # convert to 0-based index
 
+    if data['lang'] not in ['useng', 'eueng']:
+        return jsonify({'error': 'Invalid language specified'}), 400
+
     formatted_text = text
     if __name__ != '__main__':
-        tts.startEmulator()
+        romName = 'EU' if data['lang'] == 'eueng' else 'US'
+        tts.startEmulator(romName)
     try:
         audio_data = None
         if "<lyric" not in text:

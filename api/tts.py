@@ -18,7 +18,7 @@ Status codes:
 '''
 
 # Lazy way to store data the game needs; these memory addresses aren't used by the game (hopefully)
-audioRenderJobAddr=0x008c00e4
+audioRenderJobAddr=0x00af340d
 textDataAddr=0x00b27daa
 emulatorProcess = None
 
@@ -61,7 +61,7 @@ def waitForStatus(stat):
         time.sleep(0.1)
         current = emu.read_memory(audioRenderJobAddr,1)[0]
 
-def startEmulator():
+def startEmulator(romname='US'):
     global emulatorProcess
 
     # create /tmp/user directory if it doesn't exist
@@ -71,7 +71,7 @@ def startEmulator():
             with open("/tmp/user/config/sdl2-config.ini", "wb") as f2:
                 f2.write(f.read())
 
-    emulatorProcess = subprocess.Popen(['citra', '/opt/US.cxi', '-u',str(citra.CITRA_PORT)],cwd="/tmp")
+    emulatorProcess = subprocess.Popen(['citra', f'/opt/{romname}.cxi', '-u',str(citra.CITRA_PORT)],cwd="/tmp")
     connected = False
     while not connected:
         try:
