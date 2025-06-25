@@ -68,41 +68,38 @@
                             </label>
                         </div>
                     </label>
+                    <button id="randomize" class="yellow" onclick="randomizeVoiceParameters()">Randomize</button>
+                    <label for="voicetype" class="control">
+                        <label class="pill">Voice</label>
+                        <div id="voicetype">
+                            <select id="languageSelect">
+                                <option value="useng">🇺🇸 US English</option>
+                                <option value="eueng">🇪🇺 EU English</option>
+                                <option disabled value="es">🇪🇸 Spanish</option>
+                                <option disabled value="de">🇩🇪 German</option>
+                                <option disabled value="fr">🇫🇷 French</option>
+                                <option disabled value="it">🇮🇹 Italian</option>
+                                <option disabled value="nl">🇳🇱 Dutch</option>
+                            </select>
+                        </div>
+                    </label>
+                    <label for="savedVoices" class="control">
+                        <label class="pill">Presets</label>
+                        <select id="savedVoices">
+                            <option value="" disabled selected>-</option>
+                            <option value="default:youngm">Young Man</option>
+                            <option value="default:youngf">Young Woman</option>
+                            <option value="default:adultm">Adult Man</option>
+                            <option value="default:adultf">Adult Woman</option>
+                            <option value="default:oldm">Old Man</option>
+                            <option value="default:oldf">Old Woman</option>
+                        </select>
+                    </label>
                 </div>
                 <div class="buttonContainer">
-                    <button id="randomize" class="yellow" onclick="randomizeVoiceParameters()">Randomize</button>
+                    <button class="yellow" id="manageVoicesBtn" onclick="toggleManageVoices();">Manage Presets</button>
+                    <button class="yellow" id="manageVoicesBtn" onclick="savePreset();">Save new Preset</button>
                 </div>
-                <label for="voicetype" class="control">
-                    <label class="pill">Voice</label>
-                    <div id="voicetype">
-                        <select id="languageSelect">
-                            <option value="useng">🇺🇸 US English</option>
-                            <option value="eueng">🇪🇺 EU English</option>
-                            <option disabled value="es">🇪🇸 Spanish</option>
-                            <option disabled value="de">🇩🇪 German</option>
-                            <option disabled value="fr">🇫🇷 French</option>
-                            <option disabled value="it">🇮🇹 Italian</option>
-                            <option disabled value="nl">🇳🇱 Dutch</option>
-                        </select>
-                    </div>
-                </label>
-                <label for="accentSlider" class="control">
-                    <label class="pill">Presets</label>
-                    <select id="savedVoices">
-                        <option value="" disabled selected>-</option>
-                        <option value="default:youngm">Young Man</option>
-                        <option value="default:youngf">Young Woman</option>
-                        <option value="default:adultm">Adult Man</option>
-                        <option value="default:adultf">Adult Woman</option>
-                        <option value="default:oldm">Old Man</option>
-                        <option value="default:oldf">Old Woman</option>
-                    </select>
-                    <div class="buttonContainer">
-                        <button class="yellow" id="manageVoicesBtn" onclick="toggleManageVoices();">Manage Presets</button>
-                        <button class="yellow" id="manageVoicesBtn" onclick="savePreset();">Save new Preset</button>
-                    </div>
-                    <hr>
-                </label>
             </section>
             
             <div class="buttonContainer">
