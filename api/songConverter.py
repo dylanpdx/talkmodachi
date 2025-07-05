@@ -80,10 +80,14 @@ def convertLenFourth(param):
     return getTag(12,18,[{"format":"b","value":param["length"]}])
 
 def convertVibrato(param):
-    if "width" not in param or "rate" not in param:
+    if "width" not in param and "rate" not in param:
         return None
-    
-    return getTag(12,20,[{"format":"B","value":param["width"]}]) + getTag(12,21,[{"format":"B","value":param["rate"]}])
+    data = b""
+    if "rate" in param:
+        data+=getTag(12,21,[{"format":"B","value":param["rate"]}])
+    if "width" in param:
+        data+=getTag(12,20,[{"format":"B","value":param["width"]}])
+    return data
 
 conversionHandlers={
     "note":convertNote,
