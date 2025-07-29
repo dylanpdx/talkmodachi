@@ -109,8 +109,8 @@ def sendLyric(lyric,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0)
     sendText(lyric["data"],reset=False,pitch=pitch,speed=speed,quality=quality,tone=tone,accent=accent,intonation=intonation,songData=songData,bpm=lyric["bpm"],stretch=lyric["stretch"])
 
 def sendText(text,reset=True,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0,songData=None,bpm=120,stretch=50):
-    if reset:
-        text=text+"\x1b\\mrk=1\\"
+    #if reset:
+    #    text=text+"\x1b\\mrk=1\\"
 
     text = text.replace("<bleep>","\x1b\\mrk=6\\").replace("</bleep>","\x1b\\mrk=7\\")
     text = text.replace("<echo>","\x1b\\mrk=4\\").replace("</echo>","\x1b\\mrk=5\\")
