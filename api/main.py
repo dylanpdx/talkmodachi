@@ -27,17 +27,27 @@ def sing():
 
     data = newSongConverter.convertSongToTTS(data)
 
-    audio_data = tts.generateText(data, pitch, speed, quality, tone, accent, intonation)
-    audio_buffer = BytesIO(audio_data)
-    audio_buffer.seek(0)
-    
-    # Return the audio file
-    return send_file(
-        audio_buffer,
-        mimetype='audio/wav',
-        as_attachment=True,
-        download_name='speech.wav'
-    )
+    try:
+        if __name__ != '__main__':
+            romName = 'EU' if data['lang'] == 'eueng' else 'US'
+            tts.startEmulator(romName)
+
+        audio_data = tts.generateText(data, pitch, speed, quality, tone, accent, intonation)
+        audio_buffer = BytesIO(audio_data)
+        audio_buffer.seek(0)
+        
+        # Return the audio file
+        return send_file(
+            audio_buffer,
+            mimetype='audio/wav',
+            as_attachment=True,
+            download_name='speech.wav'
+        )
+    except Exception as e:
+        return "error",500
+    finally:
+        if __name__ != '__main__':
+            tts.killEmulator()
 
 @app.route('/tts', methods=['GET','POST'])
 def text_to_speech():
