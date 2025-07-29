@@ -24,12 +24,13 @@ def sing():
     tone = int(request.args.get('tone', 50))
     accent = int(request.args.get('accent', 50))
     intonation = int(request.args.get('intonation', 1))
+    lang = request.args.get('lang', 'useng')
 
     data = newSongConverter.convertSongToTTS(data)
 
     try:
         if __name__ != '__main__':
-            romName = 'EU' if data['lang'] == 'eueng' else 'US'
+            romName = 'EU' if lang == 'eueng' else 'US'
             tts.startEmulator(romName)
 
         audio_data = tts.generateText(data, pitch, speed, quality, tone, accent, intonation)
