@@ -6,12 +6,14 @@ export async function onRequest(context) {
 		return new Response("Not configured", { status: 500 });
 	}
 
-	let cresponse = await cache.match(context.request);
-	if (cresponse) {
-		return new Response(cresponse.body, {
-			status: cresponse.status,
-			headers: cresponse.headers,
-		});
+	if (context.request.method === "GET"){
+		let cresponse = await cache.match(context.request);
+		if (cresponse) {
+			return new Response(cresponse.body, {
+				status: cresponse.status,
+				headers: cresponse.headers,
+			});
+		}
 	}
 
 	const nurl=new URL(context.request.url)
@@ -33,8 +35,10 @@ export async function onRequest(context) {
 			status: response.status,
 			headers: response.headers,
 		});
-		finalResponse.headers.set("Cache-Control", "max-age=86400, public");
-		await cache.put(context.request, finalResponse.clone());
+		if (context.request.method === "GET") {
+			finalResponse.headers.set("Cache-Control", "max-age=86400, public");
+			await cache.put(context.request, finalResponse.clone());
+		}
 		return finalResponse;
 	} catch (error) {
 		console.error("Error fetching from API:", error);
