@@ -45,6 +45,8 @@ def sing():
             download_name='speech.wav'
         )
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return "error",500
     finally:
         if __name__ != '__main__':
@@ -116,6 +118,8 @@ def text_to_speech():
         )
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
     finally:
         if __name__ != '__main__':
