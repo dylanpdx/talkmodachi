@@ -37,6 +37,7 @@ export async function onRequest(context) {
 		await cache.put(context.request, finalResponse.clone());
 		return finalResponse;
 	} catch (error) {
+		console.error("Error fetching from API:", error);
 		return new Response("Error", { status: 500 });
 	}
 }
