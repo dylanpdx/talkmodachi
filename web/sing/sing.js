@@ -108,6 +108,7 @@ function generateSong(songData){
 	})
 	.then(response => {
 		if (!response.ok) {
+            alert('Error generating song: ' + response.statusText);
 			throw new Error('API request failed');
 		}
 		return response.blob();
