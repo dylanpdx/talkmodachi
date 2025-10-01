@@ -31,19 +31,19 @@ const events = {
             "v1ratio": {
                 "name": "Voice 1 Ratio",
                 "min": 0,
-                "max": 2000,
+                "max": 10000,
                 "default": 0,
             },
             "v2ratio": {
                 "name": "Voice 2 Ratio",
                 "min": 0,
-                "max": 2000,
+                "max": 10000,
                 "default": 0,
             },
             "v3ratio": {
                 "name": "Voice 3 Ratio",
                 "min": 0,
-                "max": 2000,
+                "max": 10000,
                 "default": 0,
             },
         },
