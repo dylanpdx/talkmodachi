@@ -1,0 +1,52 @@
+.controls{
+    width: 100%;
+    height: 100px;
+    padding: .3em;
+}
+
+#canv {
+    width: 100%;
+    height: calc(100vh - 115px);
+    position: relative;
+}
+
+.vars {
+    display:inline-block;
+}
+
+.hidden {
+    display: none;
+}
+
+.vars .slider{
+    width: 15em !important;
+}
+
+#controlsContainer {
+    display: inline !important;
+}
+
+.hidden.cover {
+    display: none;
+}
+
+.cover {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2em;
+    font-family: sans-serif;
+    color: #131313;
+}
+
+.outerpill {
+	background: rgb(236, 236, 236);
+    box-shadow: unset;
+	text-align: unset;
+    display: inline-block;
+    width: fit-content;
+}

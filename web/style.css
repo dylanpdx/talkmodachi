@@ -1,4 +1,4 @@
-body {
+body.tts {
 	background: linear-gradient(#fe4, #ffb);
 	display: grid;
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -10,7 +10,7 @@ body {
 	width: 100vw;
 }
 
-header {
+header.tts {
 	background:
 		conic-gradient(
 			#fd7 25%,
@@ -38,7 +38,7 @@ header h1 {
 }
 
 
-main {
+main.tts {
 	align-self: center;
 	background: #ffaa;
 	border-radius: 8px;
@@ -98,8 +98,7 @@ textarea.textBox {
 		outline: 0;
 	}
 
-#savedVoices,
-#languageSelect {
+select {
 	--background: #fff;
 	--border: #fc7;
 	--shadow: #fed;
@@ -112,8 +111,27 @@ textarea.textBox {
 		inset -3px 0 var(--shadow);
 	font-size: 16px;
 	padding: .5em;
+}
+
+#savedVoices,
+#languageSelect{
 	transition: .1s all;
 	width:100%;
+}
+
+input[type="number"] {
+	--background: #fff;
+	--border: #fc7;
+	--shadow: #fed;
+	background: var(--background);
+	border: 2px solid var(--border);
+	border-radius: 1ch;
+	box-shadow:
+		inset 0 3px var(--shadow),
+		inset 3px 0 var(--shadow),
+		inset -3px 0 var(--shadow);
+	font-size: 16px;
+	padding: .5em;
 }
 
 .buttonContainer {
@@ -214,7 +232,7 @@ button,
 	gap: 15px;
 }
 
-#controlsContainer input[type="range"] {
+#controlsContainer input[type="range"], .vars input[type="range"] {
 	appearance: none;
 	align-self: center;
 	background:
@@ -422,8 +440,8 @@ footer #lensdeer {
 	}
 
 
-	body::before,
-	body::after {
+	body.tts::before,
+	body.tts::after {
 		inset: auto auto 0 -50%;
 		perspective: inherit;
 		position: fixed;
@@ -431,7 +449,7 @@ footer #lensdeer {
 	}
 
 	/* Floor */
-	body::after {
+	body.tts::after {
 		background:
 			radial-gradient(transparent, #ff9 75%),
 			radial-gradient(
@@ -483,7 +501,7 @@ footer #lensdeer {
 	}
 
 	/* Background */
-	body::before {
+	body.tts::before {
 		animation: background 240s infinite linear;
 		background:
 			linear-gradient(

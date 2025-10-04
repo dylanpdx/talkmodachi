@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, send_file
 from io import BytesIO
 import citra,utils
 from flask_cors import CORS
+import newSongConverter
 
 if __name__ != '__main__':
     citra.CITRA_PORT = utils.findFreePort()
@@ -11,34 +12,52 @@ import tts
 app = Flask(__name__)
 CORS(app)
 
-def formatCommandP(commandCode,param):
-    commandCode = int(commandCode)
-    param = int(param)
-    return f"\x1b\\mrk={commandCode}{param:>07}\\"
+def sing():
+    # get body
+    data = request.get_json()
+    if not data or 'notes' not in data or data['notes'] is None:
+        return jsonify({'error': 'Missing notes parameter'}), 400 # todo update this
+    
+    pitch = int(request.args.get('pitch', 50))
+    speed = int(request.args.get('speed', 50))
+    quality = int(request.args.get('quality', 50))
+    tone = int(request.args.get('tone', 50))
+    accent = int(request.args.get('accent', 50))
+    intonation = int(request.args.get('intonation', 1))
+    lang = request.args.get('lang', 'useng')
 
-def formatCommand(commandCode):
-    commandCode = int(commandCode)
-    return f"\x1b\\mrk={commandCode}\\"
+    data = newSongConverter.convertSongToTTS(data)
 
-@app.route('/tts', methods=['GET'])
+    try:
+        if __name__ != '__main__':
+            romName = 'EU' if lang == 'eueng' else 'US'
+            tts.startEmulator(romName)
+
+        audio_data = tts.generateText(data, pitch, speed, quality, tone, accent, intonation)
+        audio_buffer = BytesIO(audio_data)
+        audio_buffer.seek(0)
+        
+        # Return the audio file
+        return send_file(
+            audio_buffer,
+            mimetype='audio/wav',
+            as_attachment=True,
+            download_name='speech.wav'
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return "error",500
+    finally:
+        if __name__ != '__main__':
+            tts.killEmulator()
+
+@app.route('/tts', methods=['GET','POST'])
 def text_to_speech():
-    """
-    API endpoint that converts text to speech.
-    
-    Expected query parameters:
-    {
-        "text": "Text to convert to speech",
-        "pitch": 50,         # Optional: 0 to 100
-        "speed": 50,         # Optional: 0 to 100
-        "quality": 50,       # Optional: 0 to 100
-        "tone": 50,          # Optional: 0 to 100
-        "accent": 50,        # Optional: 0 to 100
-        "intonation": 1       # Optional: 1, 2, 3, or 4
-    }
-    
-    Returns:
-    - Audio file in WAV format
-    """
+
+    if request.method == 'POST':
+        return sing() # Bypass default TTS and use sing function
+
     data = {
         'text': request.args.get('text', None),
         'pitch': request.args.get('pitch', 50),
@@ -99,6 +118,8 @@ def text_to_speech():
         )
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
     finally:
         if __name__ != '__main__':
