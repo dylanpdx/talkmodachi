@@ -49,7 +49,7 @@ main {
 	justify-self: center;
 	max-width: 50vw;
 	padding: 20px;
-	z-index: 3;
+	z-index: 5;
 }
 
 .pill {
