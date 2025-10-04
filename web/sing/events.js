@@ -31,19 +31,19 @@ const events = {
             "v1ratio": {
                 "name": "Voice 1 Ratio",
                 "min": 0,
-                "max": 10000,
+                "max": 20000,
                 "default": 0,
             },
             "v2ratio": {
                 "name": "Voice 2 Ratio",
                 "min": 0,
-                "max": 10000,
+                "max": 20000,
                 "default": 0,
             },
             "v3ratio": {
                 "name": "Voice 3 Ratio",
                 "min": 0,
-                "max": 10000,
+                "max": 20000,
                 "default": 0,
             },
         },
@@ -59,7 +59,7 @@ const addEventSelect = document.getElementById("addEventSelect");
 
 function updateVarsDivs(){
     const selectedValue = addEventSelect.value;
-    document.querySelectorAll("#eventsMenu > div").forEach(div => {
+    document.querySelectorAll("#eventsMenu .vars").forEach(div => {
         div.classList.add("hidden");
     });
     if (selectedValue && events[selectedValue]) {
@@ -79,22 +79,39 @@ for (const [key, value] of Object.entries(events)) {
         eventDiv.className = "vars hidden";
         
         for (const [varKey, varValue] of Object.entries(value.vars)) {
+            const variableDiv = document.createElement("div");
+            variableDiv.className = "pill outerpill";
+            eventDiv.appendChild(variableDiv);
+
             const label = document.createElement("label");
             label.textContent = varValue.name;
             label.htmlFor = `${key}-${varKey}`;
+            label.className = "pill";
             
             const input = document.createElement("input");
             input.type = "range";
+            input.className = "slider"
             input.id = `${key}-${varKey}`;
             input.min = varValue.min;
             input.max = varValue.max;
             input.value = varValue.default;
             
-            eventDiv.appendChild(label);
-            eventDiv.appendChild(input);
+            const valueDisplay = document.createElement("span");
+            valueDisplay.id = `${key}-${varKey}-value`;
+            valueDisplay.textContent = varValue.default;
+            input.addEventListener("input", function() {
+                valueDisplay.textContent = input.value;
+            });
+            valueDisplay.style.width = "5ch";
+            valueDisplay.style.display = "inline-block";
+            valueDisplay.style.textAlign = "center";
+
+            variableDiv.appendChild(label);
+            variableDiv.appendChild(input);
+            variableDiv.appendChild(valueDisplay);
         }
         
-        document.getElementById("eventsMenu").appendChild(eventDiv);
+        document.getElementById("controlsContainer").appendChild(eventDiv);
     }
 
     addEventSelect.addEventListener("change", function() {

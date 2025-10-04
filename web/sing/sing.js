@@ -90,7 +90,10 @@ const canvElement = document.getElementById('canv');
 const playButton = document.getElementById('playButton');
 const audioPlayer = document.getElementById('audioPlayer');
 const previewAudioPlayer = document.getElementById('previewAudioPlayer');
-const toggleModeButton = document.getElementById('toggleModeButton');
+const notesModeButton = document.getElementById('toggleNoteModeButton');
+const eventsModeButton = document.getElementById('toggleEventModeButton');
+const loadingCover = document.getElementById('loadingCover');
+
 const apiUrl = '/tts';
 let mode='note'; // note= placing notes, event= placing events
 
@@ -99,6 +102,7 @@ canvElement.oncontextmenu = (e) => {
 };
 
 function generateSong(songData){
+    loadingCover.classList.remove('hidden');
 	fetch(apiUrl, {
 		method: 'POST',
 		headers: {
@@ -107,6 +111,7 @@ function generateSong(songData){
 		body: JSON.stringify(songData)
 	})
 	.then(response => {
+        loadingCover.classList.add('hidden');
 		if (!response.ok) {
             alert('Error generating song: ' + response.statusText);
 			throw new Error('API request failed');
@@ -117,7 +122,6 @@ function generateSong(songData){
 		const audioUrl = URL.createObjectURL(audioBlob);
 		audioPlayer.src = audioUrl;
 		audioPlayer.play();
-		
 	})
 }
 
@@ -133,10 +137,16 @@ function toggleMode(newmode){
     const eventsMenu = document.getElementById('eventsMenu');
     if (mode === 'event') {
         eventsMenu.classList.remove('hidden');
+        notesModeButton.classList.add('yellow');
+        eventsModeButton.classList.remove('yellow');
     } else {
         eventsMenu.classList.add('hidden');
+        notesModeButton.classList.remove('yellow');
+        eventsModeButton.classList.add('yellow');
     }
 }
+
+toggleMode('note');
 
 async function main(){
 
@@ -401,6 +411,7 @@ async function main(){
 
         // draw a rectangle around the text
         eventHeaderOutline.beginFill(eventColor);
+        eventHeaderOutline.lineStyle(2, 0x000000);
         eventHeaderOutline.drawRoundedRect(eventHeaderText.x - 5, eventHeaderText.y - 5, eventHeaderText.width + 10, eventHeaderText.height + 10,10);
         eventHeaderOutline.endFill();
         

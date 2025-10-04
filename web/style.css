@@ -232,7 +232,7 @@ button,
 	gap: 15px;
 }
 
-#controlsContainer input[type="range"] {
+#controlsContainer input[type="range"], .vars input[type="range"] {
 	appearance: none;
 	align-self: center;
 	background:

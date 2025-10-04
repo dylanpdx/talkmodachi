@@ -1,42 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<script src="pixi.min.js"></script>
-<script src="../utils.js"></script>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <script src="pixi.min.js"></script>
+    <script src="../utils.js"></script>
+    <link rel="stylesheet" href="../style.css?v=20251004">
+    <link rel="stylesheet" href="style.css?v=20251004">
 </head>
 <body style="margin: 0;">
     <audio id="audioPlayer"></audio>
     <audio id="previewAudioPlayer"></audio>
     <div class="controls">
         <div class="top">
-            bpm
-            <input type="number" min="25" max="200" value="120" id="bpmInput">
-            grid
-            <select id="gridSelect">
-                <option value="1" selected>1</option>
-                <option value="1/2">1/2</option>
-                <option value="1/3">1/3</option>
-                <option value="1/4">1/4</option>
-                <option value="1/6">1/6</option>
-                <option value="1/8">1/8</option>
-                <option value="1/12">1/12</option>
-                <option value="1/16">1/16</option>
-            </select>
-            <button id="playButton">Play</button>
-            <button id="toggleModeButton" onclick="toggleMode('note')">🎶</button>
-            <button id="toggleModeButton" onclick="toggleMode('event')">📍</button>
+            <div class="pill outerpill">
+                <span class="pill">BPM</span>
+                <input type="number" min="25" max="200" value="120" id="bpmInput">
+            </div>
+            <div class="pill outerpill">
+                <span class="pill">Grid</span>
+                <select id="gridSelect">
+                    <option value="1" selected>1</option>
+                    <option value="1/2">1/2</option>
+                    <option value="1/3">1/3</option>
+                    <option value="1/4">1/4</option>
+                    <option value="1/6">1/6</option>
+                    <option value="1/8">1/8</option>
+                    <option value="1/12">1/12</option>
+                    <option value="1/16">1/16</option>
+                </select>
+            </div>
+            <button id="playButton" class="yellow">Play</button>
+            <button id="toggleNoteModeButton" class="yellow" onclick="toggleMode('note')">Edit Notes</button>
+            <button id="toggleEventModeButton" class="yellow" onclick="toggleMode('event')">Edit Events</button>
         </div>
         <div id="eventsMenu" class="bottom hidden">
-            Event Type:
-            <select id="addEventSelect">
-            </select>
+            <div class="pill outerpill">
+                <span class="pill">Event Type:</span>
+                <select id="addEventSelect"></select>
+            </div>
+            
+            <div id="controlsContainer"></div>
         </div>
     </div>
+    <div class="hidden cover" id="loadingCover">
+        <div class="loader">Generating...</div>
+    </div>
     <div id="canv"></div>
-    <script src="events.js"></script>
-    <script src="sing.js"></script>
+    <script src="events.js?v=20251004"></script>
+    <script src="sing.js?v=20251004"></script>
 </body>
 </html>
