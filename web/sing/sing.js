@@ -199,6 +199,7 @@ async function main(){
     const noteYStart = 0;
     const beatToPixel = 100; // 1 beat = 100 pixels
     const defaultNoteColor = 0xC0C0FF;
+    const defaultNoteBendColor = 0x8080FF;
     let placingNote = null;
     let placingOffset = 0;
     let resizingNote = null;
@@ -330,10 +331,69 @@ async function main(){
         noteRect.endFill();
         notec.addChild(noteRect);
 
+        const noteBend = new PIXI.Container();
+        const noteBendLine = new PIXI.Graphics();
+        noteBendLine.x = 0;
+        noteBendLine.y = 0;
+        noteBend.addChild(noteBendLine);
+        noteBend.interactiveChildren = false;
+        notec.addChild(noteBend);
+
         const noteText = new PIXI.Text("La", { fontSize: 14, fill: 0x000000 });
         noteText.x = 0;
         noteText.y = 2;
         notec.addChild(noteText);
+
+        notec._nWidth = length; // store original width
+        notec._nRect = noteRect; // store rect for resizing
+        notec._nBendLine = noteBendLine;
+        notec._bend = [{pos:0,val:0},{pos:length,val:0}]; // default bend
+        notec.rerenderBend = function(){
+            this._nBendLine.clear();
+            let wipLine = this._nBendLine.moveTo(0, noteHeight/2);
+            this._bend.forEach((bendi) => {
+                const bendY = (noteHeight/2) - (bendi.val * (noteHeight));
+                wipLine = wipLine.lineTo(bendi.pos,bendY);
+            });
+            wipLine.stroke({color: defaultNoteBendColor, width: 3, alpha: 1});
+            // at each bend point, draw a circle (debug)
+            this._bend.forEach((bendi) => {
+                const bendY = (noteHeight/2) - (bendi.val * (noteHeight));
+                this._nBendLine.beginFill(defaultNoteBendColor);
+                this._nBendLine.drawCircle(bendi.pos, bendY, 2);
+                this._nBendLine.endFill();
+            });
+        }
+        notec.fillinBend = function(){
+            // if any bend pos's > width, clamp them. if any <0, clamp them; if there's no bend at 0 or width, add them
+            let needRerender = false;
+            this._bend = this._bend.filter(bendi => {
+                if (bendi.pos < 0) {
+                    needRerender = true;
+                    return false;
+                }
+                if (bendi.pos > this._nWidth) {
+                    needRerender = true;
+                    return false;
+                }
+                return true;
+            });
+            if (this._bend.length === 0 || this._bend[0].pos > 0) {
+                this._bend.unshift({pos:0,val:0});
+                needRerender = true;
+            }
+            if (this._bend[this._bend.length - 1].pos < this._nWidth) {
+                lastVal = this._bend.length > 0 ? this._bend[this._bend.length - 1].val : 0;
+                this._bend.push({pos:this._nWidth,val:lastVal});
+                needRerender = true;
+            }
+
+            if (needRerender)
+                this.rerenderBend();
+        }
+        notec.fillinBend();
+        notec.rerenderBend();
+
         notec.x = pos;
         notec.y = noteIndex * noteHeight;
         notesHolder.addChild(notec);
@@ -342,7 +402,7 @@ async function main(){
         notec.on('mousedown', (event) => {
             event.stopPropagation(); // Prevent event bubbling
             const localPos = event.data.getLocalPosition(pianoTrackContainer);
-            const isResize = (localPos.x - notec.x) >= (notec.width - 5);
+            const isResize = (localPos.x - notec.x) >= (notec._nWidth - 5);
             if (!isResize){
                 notec.cursor = 'grabbing';
                 placingOffset = notec.x - localPos.x;
@@ -495,7 +555,7 @@ async function main(){
     function startEditingNoteText(note) {
         const noteText = getNoteText(note);
         const gpos = note.getGlobalPosition();
-        const input = createInputAt(gpos.x, gpos.y, note.width, noteHeight);
+        const input = createInputAt(gpos.x, gpos.y, note._nWidth, noteHeight);
         note._editingInput = input;
         input.style.backgroundColor = "#"+defaultNoteColor.toString(16);
         input.value = noteText || '';
@@ -518,7 +578,7 @@ async function main(){
         if (placingNote === note || resizingNote === note)
             return;
         const localPos = event.data.getLocalPosition(pianoTrackContainer);
-        const isResize = (localPos.x - note.x) >= (note.width - 5);
+        const isResize = (localPos.x - note.x) >= (note._nWidth - 5);
         if (!isResize){
             note.cursor = 'grab';
         }else{
@@ -539,7 +599,7 @@ async function main(){
         getAllNotes().forEach((note) => {
             const noteIndex = Math.floor(note.y / noteHeight);
             const pos = note.x / beatToPixel;
-            const durBeats = note.width/beatToPixel;
+            const durBeats = note._nWidth/beatToPixel;
             //const durSec = (60/ getBpm()) * durBeats;
             const noteName = notes[noteIndex].name;
             const noteText = getNoteText(note);
@@ -564,12 +624,12 @@ async function main(){
         return notes.filter(note => note != noteToExclude);
     }
     function doNotePosOverlap(note1, pos,width) {
-        return !(note1.x + note1.width < pos || approxEqual(note1.x + note1.width, pos) ||
+        return !(note1.x + note1._nWidth < pos || approxEqual(note1.x + note1._nWidth, pos) ||
                  pos + width < note1.x || approxEqual(pos + width, note1.x));
     }
 
     function doNotesOverlap(note1, note2) {
-        return doNotePosOverlap(note1, note2.x, note2.width);
+        return doNotePosOverlap(note1, note2.x, note2._nWidth);
     }
 
     function clearAllNoteTints() {
@@ -596,7 +656,6 @@ async function main(){
             }
 
             placingNote = addNote(noteIndex, newPos, getGridSize());
-
             const noteName = notes[noteIndex].name;
             if (lastPreviewedNote !== noteName) {
                 previewNote(noteName);
@@ -620,7 +679,7 @@ async function main(){
             newPos = Math.round(newPos / (gridSize * beatToPixel)) * (gridSize * beatToPixel);
             newPos = Math.max(0, newPos); // prevent negative positions
             // prevent note from overlapping with other notes
-            const overlappingNote = getAllNotesExcept(placingNote).find(othernote => doNotePosOverlap(othernote, newPos, placingNote.width));
+            const overlappingNote = getAllNotesExcept(placingNote).find(othernote => doNotePosOverlap(othernote, newPos, placingNote._nWidth));
             clearAllNoteTints();
             if (overlappingNote) {
                 overlappingNote.tint = 0xFF7070; // highlight overlapping notes
@@ -641,7 +700,7 @@ async function main(){
             }
 
         }else if (resizingNote) {
-            let width = resizingNote.width;
+            let width = resizingNote._nWidth;
             width = localPos.x - resizingNote.x;
 
             // snap width to grid
@@ -663,6 +722,8 @@ async function main(){
                     child.width = width;
                 }
             });
+            resizingNote._nWidth = width; // update stored width
+            resizingNote.fillinBend();
         }
     }
 
@@ -714,7 +775,7 @@ async function main(){
             const gridSize = getGridSize();
             const snappedPos = Math.round(newPos / (gridSize * beatToPixel)) * (gridSize * beatToPixel);
             editingEvent._line.x = snappedPos; // update the line position
-            editingEvent.x = snappedPos - (editingEvent.width / 2) + noteWidth; // center the header text
+            editingEvent.x = snappedPos - (editingEvent._nWidth / 2) + noteWidth; // center the header text
             app.render();
         }
     });
