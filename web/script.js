@@ -11,6 +11,8 @@ const manageVoicesList = document.getElementById('manageVoicesList');
 const manageVoicesDialog = document.getElementById('manageVoicesDialog');
 const manageVoicesBtn = document.getElementById('manageVoicesBtn');
 const voiceLanguageSelect = document.getElementById('languageSelect');
+const otherSitesBtn = document.getElementById('otherSitesBtn');
+const otherSitesDialog = document.getElementById('otherSitesDialog');
 
 const presetVoices = {
 	youngm:{accent: 25,intonation: 0,pitch: 60,quality: 72,speed: 59,tone: 25},
@@ -102,6 +104,19 @@ function toggleManageVoices() {
 	} else {
 		manageVoicesDialog.setAttribute('open', 'true');
 	}
+}
+
+function toggleOtherSites() {
+	if (!otherSitesDialog) return;
+	if (otherSitesDialog.hasAttribute('open')) {
+		otherSitesDialog.removeAttribute('open');
+	} else {
+		otherSitesDialog.setAttribute('open', 'true');
+	}
+}
+
+if (otherSitesBtn) {
+	otherSitesBtn.addEventListener('click', toggleOtherSites);
 }
 
 function savePreset(){
