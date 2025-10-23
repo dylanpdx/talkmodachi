@@ -61,6 +61,17 @@ int wcslen(const uint16_t* start)
     return end - start;
 }
 
+// Receives UTF-16 string and stores it in memory
+uint16_t* utfRecv(uint16_t* in,int* len){
+	int inLen = wcslen(in);
+	*len = inLen;
+	uint16_t* out = (uint16_t*)tmalloc(*len*2);
+	for (int i = 0; i <= inLen; i++){
+		out[i] = in[i];
+	}
+	return out;
+}
+
 void callTTS(uint16_t* text){
 	int textSize = wcslen(text)*2;
 	ttsGlobal* ttsGlob = getTtsGlobal();
@@ -129,7 +140,8 @@ void mainLoopF(){
 
 			// save the text data
 			int textSize = 0;
-			uint16_t* text = utfTo16((char*)textDataLoc,&textSize);
+			//uint16_t* text = utfTo16((char*)textDataLoc,&textSize);
+			uint16_t* text = utfRecv((uint16_t*)textDataLoc,&textSize);
 
 			if (audioJob->songDataSize == 0){
 				callTTS(text);
