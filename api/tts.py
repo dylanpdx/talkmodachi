@@ -55,11 +55,14 @@ def calcFileLength(bytes):
     fLen = len(bytes)
     return fLen / (16000*2)
 
-def waitForStatus(stat):
+def waitForStatus(stat, timeout=60):
     current=-1
+    start_time = time.time()
     while current != stat:
         time.sleep(0.1)
         current = emu.read_memory(audioRenderJobAddr,1)[0]
+        if time.time() - start_time > timeout:
+            raise TimeoutError(f"Timed out waiting for status {stat}")
 
 def startEmulator(romname='US'):
     global emulatorProcess
