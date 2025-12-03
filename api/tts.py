@@ -118,7 +118,7 @@ def sendText(text,reset=True,pitch=50,speed=50,quality=50,tone=50,accent=50,into
     text = text.replace("<bleep>","\x1b\\mrk=6\\").replace("</bleep>","\x1b\\mrk=7\\")
     text = text.replace("<echo>","\x1b\\mrk=4\\").replace("</echo>","\x1b\\mrk=5\\")
     text=text+"\0"
-    emu.write_memory(textDataAddr,text.encode('utf-8'))
+    emu.write_memory(textDataAddr,text.encode('utf-16le'))
 
     writeJob(bpm,stretch,pitch,speed,quality,tone,accent,intonation,songData) # default values
 
