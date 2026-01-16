@@ -93,5 +93,5 @@ COPY --from=builder /src/build/bin/Release /usr/local/bin
 RUN mkdir /config
 COPY sdl2-config.ini /config/sdl2-config.ini
 
-ENTRYPOINT ["gunicorn", "-b","0.0.0.0:5000","-w","32","main:app"]
+ENTRYPOINT ["gunicorn", "-b","0.0.0.0:5000","-w","32","main:app", "--access-logfile","-","--error-logfile","-"]
 #ENTRYPOINT [ "sh" ]
