@@ -47,7 +47,7 @@ def sing():
     try:
         langId = langToId(lang)
         if __name__ != '__main__':
-            romName = 'EU' if lang == 'eueng' else 'US'
+            romName = 'US' if lang == 'useng' else 'EU'
             
             tts.startEmulator(romName,langId)
 
@@ -113,7 +113,7 @@ def text_to_speech():
     formatted_text = text
     langId = langToId(data['lang'])
     if __name__ != '__main__':
-        romName = 'EU' if data['lang'] == 'eueng' else 'US'
+        romName = 'US' if data['lang'] == 'useng' else 'EU'
         tts.startEmulator(romName, langId)
     try:
         audio_data = None
