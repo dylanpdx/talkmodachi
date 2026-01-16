@@ -21,9 +21,9 @@ Status codes:
 audioRenderJobAddr=0x00af340d
 textDataAddr=0x00b27daa
 emulatorProcess = None
+structDef = "BBBBBBBBBiIiBB"
 
 def readJob():
-    structDef = "BBBBBBBBBiIiB"
     structSize = struct.calcsize(structDef)
     data = emu.read_memory(audioRenderJobAddr,structSize)
     unpacked = struct.unpack(structDef,data)
@@ -40,13 +40,13 @@ def readJob():
         "audioSize": unpacked[9],
         "audioData": unpacked[10],
         "allocatedSize": unpacked[11],
-        "songDataSize": unpacked[12]
+        "language": unpacked[12],
+        "songDataSize": unpacked[13]
     }
 
 def writeJobRaw(job,songData=None):
-    structDef = "BBBBBBBBBiIiB"
     structSize = struct.calcsize(structDef)
-    data = struct.pack(structDef,job["status"],job["bpm"],job["stretch"],job["pitch"],job["speed"],job["quality"],job["tone"],job["accent"],job["intonation"],job["audioSize"],job["audioData"],job["allocatedSize"],job["songDataSize"])
+    data = struct.pack(structDef,job["status"],job["bpm"],job["stretch"],job["pitch"],job["speed"],job["quality"],job["tone"],job["accent"],job["intonation"],job["audioSize"],job["audioData"],job["allocatedSize"],job["language"],job["songDataSize"])
     emu.write_memory(audioRenderJobAddr,data)
     if songData is not None:
         emu.write_memory(audioRenderJobAddr+structSize,songData)
@@ -55,16 +55,20 @@ def calcFileLength(bytes):
     fLen = len(bytes)
     return fLen / (16000*2)
 
-def waitForStatus(stat, timeout=60):
+def waitForStatus(stat, timeout=60,setLanguage=None):
     current=-1
     start_time = time.time()
     while current != stat:
+        if setLanguage is not None:
+            job = readJob()
+            job["language"] = setLanguage
+            writeJobRaw(job)
         time.sleep(0.1)
         current = emu.read_memory(audioRenderJobAddr,1)[0]
         if time.time() - start_time > timeout:
             raise TimeoutError(f"Timed out waiting for status {stat}")
 
-def startEmulator(romname='US'):
+def startEmulator(romname='US',setLanguage=None):
     global emulatorProcess
 
     # create /tmp/user directory if it doesn't exist
@@ -78,7 +82,7 @@ def startEmulator(romname='US'):
     connected = False
     while not connected:
         try:
-            waitForStatus(1)
+            waitForStatus(1,setLanguage=setLanguage)
             connected = True
         except TimeoutError:
             pass
@@ -90,7 +94,7 @@ def killEmulator():
         emulatorProcess.wait()
         emulatorProcess = None
 
-def writeJob(bpm,stretch,pitch,speed,quality,tone,accent,intonation,songData):
+def writeJob(bpm,stretch,pitch,speed,quality,tone,accent,intonation,songData,language):
     writeJobRaw({
         "status": 1,
         "bpm": bpm,
@@ -104,14 +108,15 @@ def writeJob(bpm,stretch,pitch,speed,quality,tone,accent,intonation,songData):
         "audioSize": 0,
         "audioData": 0,
         "allocatedSize": 0,
+        "language": language,
         "songDataSize": len(songData) if songData is not None else 0
     },songData)
 
-def sendLyric(lyric,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0):
+def sendLyric(lyric,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0,language=1):
     songData = songConverter.convertLyricParams(lyric["params"])
-    sendText(lyric["data"],reset=False,pitch=pitch,speed=speed,quality=quality,tone=tone,accent=accent,intonation=intonation,songData=songData,bpm=lyric["bpm"],stretch=lyric["stretch"])
+    sendText(lyric["data"],reset=False,pitch=pitch,speed=speed,quality=quality,tone=tone,accent=accent,intonation=intonation,songData=songData,bpm=lyric["bpm"],stretch=lyric["stretch"],language=language)
 
-def sendText(text,reset=True,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0,songData=None,bpm=120,stretch=50):
+def sendText(text,reset=True,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0,songData=None,bpm=120,stretch=50,language=1):
     #if reset:
     #    text=text+"\x1b\\mrk=1\\"
 
@@ -120,7 +125,7 @@ def sendText(text,reset=True,pitch=50,speed=50,quality=50,tone=50,accent=50,into
     text=text+"\0"
     emu.write_memory(textDataAddr,text.encode('utf-16le'))
 
-    writeJob(bpm,stretch,pitch,speed,quality,tone,accent,intonation,songData) # default values
+    writeJob(bpm,stretch,pitch,speed,quality,tone,accent,intonation,songData,language) # default values
 
     emu.write_memory(audioRenderJobAddr,b"\x05") # set status to 5
 
@@ -164,9 +169,9 @@ def singText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0):
     print("Length: "+str(calcFileLength(fullData))+"s")
     return convertDataToMp3(fullData)
 
-def generateText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0):
-    waitForStatus(1)
-    sendText(text,pitch=pitch,speed=speed,quality=quality,tone=tone,accent=accent,intonation=intonation)
+def generateText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0,language=1):
+    waitForStatus(1,setLanguage=language)
+    sendText(text,pitch=pitch,speed=speed,quality=quality,tone=tone,accent=accent,intonation=intonation,language=language)
     waitForStatus(3)
 
     data = readRenderedAudio()

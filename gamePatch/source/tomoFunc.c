@@ -10,3 +10,7 @@ void setupTTS(){
 ttsGlobal* getTtsGlobal(){
     return *((ttsGlobal**)ADDR_ttsGlobal);
 }
+
+void setTTSGlobal(ttsGlobal* newGlobal){
+    *((ttsGlobal**)ADDR_ttsGlobal) = newGlobal;
+}

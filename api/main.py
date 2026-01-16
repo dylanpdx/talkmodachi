@@ -12,6 +12,22 @@ import tts
 app = Flask(__name__)
 CORS(app)
 
+def langToId(lang):
+    if lang == 'useng':
+        return 1
+    elif lang == 'eueng':
+        return 1
+    elif lang == 'es':
+        return 5
+    elif lang == 'de':
+        return 3
+    elif lang == 'fr':
+        return 2
+    elif lang == 'it':
+        return 4
+    else:
+        return 1
+
 def sing():
     # get body
     data = request.get_json()
@@ -29,11 +45,13 @@ def sing():
     data = newSongConverter.convertSongToTTS(data)
 
     try:
+        langId = langToId(lang)
         if __name__ != '__main__':
             romName = 'EU' if lang == 'eueng' else 'US'
-            tts.startEmulator(romName)
+            
+            tts.startEmulator(romName,langId)
 
-        audio_data = tts.generateText(data, pitch, speed, quality, tone, accent, intonation)
+        audio_data = tts.generateText(data, pitch, speed, quality, tone, accent, intonation,language=langId)
         audio_buffer = BytesIO(audio_data)
         audio_buffer.seek(0)
         
@@ -89,21 +107,22 @@ def text_to_speech():
         return jsonify({'error': 'Invalid parameter values'}), 400
     intonation = intonation - 1 # convert to 0-based index
 
-    if data['lang'] not in ['useng', 'eueng']:
+    if data['lang'] not in ['useng', 'eueng', 'es', 'de', 'fr', 'it']:
         return jsonify({'error': 'Invalid language specified'}), 400
 
     formatted_text = text
+    langId = langToId(data['lang'])
     if __name__ != '__main__':
         romName = 'EU' if data['lang'] == 'eueng' else 'US'
-        tts.startEmulator(romName)
+        tts.startEmulator(romName, langId)
     try:
         audio_data = None
         if "<lyric" not in text:
             # Generate audio from text using the tts module
-            audio_data = tts.generateText(formatted_text, pitch, speed, quality, tone, accent, intonation)
+            audio_data = tts.generateText(formatted_text, pitch, speed, quality, tone, accent, intonation,langId)
         else:
             formatted_text = formatted_text.replace("\n","").replace("\t","").strip()
-            audio_data = tts.singText(formatted_text, pitch, speed, quality, tone, accent, intonation)
+            audio_data = tts.singText(formatted_text, pitch, speed, quality, tone, accent, intonation, langId)
 
         # Create a BytesIO object to serve the audio data
         audio_buffer = BytesIO(audio_data)

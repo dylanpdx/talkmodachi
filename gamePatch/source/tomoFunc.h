@@ -23,6 +23,8 @@
 #elif REGION_EU
 #define ADDR_unknown_ptr 0x00acd5a4 // TODO: verify this address
 #define ADDR_ttsGlobal 0x00acd54c
+#define ADDR_newTtsGlobal 0x00107230 // new() for ttsGlobal
+#define ADDR_setupTtsGlobal 0x00107180 // setup function for ttsGlobal
 #define ADDR_setupFunc 0x00391788
 #define ADDR_doTTS 0x00191ef0
 #define ADDR_msbtToText 0x003d3c9c
@@ -47,6 +49,14 @@ typedef struct {
 	int textInputLen; // length of text * 2
 	uint16_t *textInput;
 }  ttsInput;
+
+#ifdef REGION_EU
+typedef void newTtsGlobal(ttsGlobal* ttsGlob);
+static newTtsGlobal* newTtsGlobalFunc = (newTtsGlobal*)ADDR_newTtsGlobal;
+
+typedef void setupTtsGlobal(ttsGlobal* ttsGlob);
+static setupTtsGlobal* setupTtsGlobalFunc = (setupTtsGlobal*)ADDR_setupTtsGlobal;
+#endif
 
 typedef uint doTTS(int *param_1,int param_2,ttsInput *param_3);
 static doTTS* ttsFunc = (doTTS*)ADDR_doTTS;
@@ -96,3 +106,4 @@ static RESET_TTS* RESET_TTSFunc = (RESET_TTS*)ADDR_RESET_TTS;
 void setupTTS();
 
 ttsGlobal* getTtsGlobal();
+void setTTSGlobal(ttsGlobal* newGlobal);

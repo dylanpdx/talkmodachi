@@ -21,6 +21,7 @@ typedef struct{
 	int audioSize;
 	char* audioData;
 	int allocatedSize;
+	volatile char language;
 	volatile char songDataSize;
 	short songData[255];
 } audioRenderJob;
@@ -32,6 +33,52 @@ audioRenderJob* audioJob = (audioRenderJob*)0x00af340d; // other unused memory l
 
 int* ttsPtr = 0x0;
 int ttsNumber=0;
+
+/*#ifdef REGION_EU // TODO: this code currently does not work
+void initTTSGlobal(){
+	ttsGlobal* global = getTtsGlobal();
+	if (global == 0x0){
+		ttsGlobal* newGlobal = (ttsGlobal*)tmalloc(sizeof(ttsGlobal));
+		memset(newGlobal,0,sizeof(ttsGlobal));
+		newTtsGlobalFunc(newGlobal);
+		setTTSGlobal(newGlobal);
+		setupTtsGlobalFunc(newGlobal);
+	}
+}
+
+void freeTTSGlobal(){
+	ttsGlobal* global = getTtsGlobal();
+	if (global != 0x0){
+		global->vtable->free_ttsClass(global);
+		global->vtable->free_ttsGlobal(global);
+		setTTSGlobal(0x0);
+	}
+}
+#endif*/
+
+int getSysRegion(){
+	#ifdef REGION_US
+	return 0x1;
+	#elif REGION_EU
+	return 0x2;
+	#endif
+}
+
+int getSysLang(){
+	// 1 = English US
+	// 2 = French
+	// 3 = German
+	// 4 = Italian
+	// 5 = Spanish
+	if (audioJob->language < 1 || audioJob->language > 5)
+		while (audioJob->language < 1 || audioJob->language > 5)
+		{
+			// wait for a valid language to be set. this is a lazy fix since currently languages cannot be switched in runtime
+		}
+	//if (audioJob->language < 1 || audioJob->language > 5)
+		//return 1;
+	return audioJob->language;
+}
 
 uint16_t* utfTo16(char* in,int* len){
 	int inLen = strlen(in)+1;
@@ -82,7 +129,6 @@ void callTTS(uint16_t* text){
 	// write text to debugDataLoc+4
 	//memcpy((void*)(debugDataLoc+4),text,textSize);
 
-	//((void(*)(ttsGlobal*))0x0039153c)(ttsGlob); // this may not be needed
 	setVoicePitchFunc(ttsGlob,audioJob->pitch);
 	setVoiceSpeedFunc(ttsGlob,audioJob->speed);
 	setVoiceQualityFunc(ttsGlob,audioJob->quality);
@@ -130,13 +176,22 @@ void saveTtsSettings(int* ptr){
 void mainLoopF(){
 	int sz = 0;
 	int* ptr = (int*)((int*)ADDR_unknown_ptr)[0];
-	
+	int loadedLang = getSysLang();
 
 	audioJob->status = WAITING_FOR_TEXT;
 	while(true){
 		if (audioJob->status==TEXT_READY){
 			audioJob->status = PROCESSING;
 			audioJob->audioSize = 0; // reset audio size
+
+			/*#ifdef REGION_EU // TODO: this code currently does not work
+			if (loadedLang != getSysLang()){
+				freeTTSGlobal();
+				loadedLang = 2;
+				audioJob->language = loadedLang;
+				initTTSGlobal();
+			}
+			#endif*/
 
 			// save the text data
 			int textSize = 0;

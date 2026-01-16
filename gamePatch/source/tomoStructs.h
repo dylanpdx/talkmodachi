@@ -15,11 +15,23 @@ typedef struct {
     audioEffectsParams *effects;
 } ttsClass; // ingame size: 0x6a10
 
+struct ttsGlobal_vtable {
+    void (*free_ttsClass)(void *); // ttsGlobal*
+    void *field1_0x4;
+    void (*free_ttsGlobal)(void *); // ttsGlobal*
+    void *field3_0xc;
+    void *field4_0x10;
+};
+
 typedef struct {
-    PADDING(0x0,0x7);
+    struct ttsGlobal_vtable* vtable;
+    int field2_0x4;
     ttsClass *mainTtsClass;
     undefined field9_0xc;
     undefined field10_0xd;
+    undefined field11_0xe;
+    undefined field12_0xf;
+    int field13_0x10;
 } ttsGlobal; // ingame size: 0x14
 
 typedef struct {

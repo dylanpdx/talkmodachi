@@ -10,6 +10,18 @@ getTtsData:
   func: getTtsData
   link: true
 
+getMappedSysLang:
+  type: branch
+  addr: 0x0010719c
+  func: getSysLang
+  link: true
+
+getMapSysRegion:
+  type: branch
+  addr: 0x0010df08
+  func: getSysRegion
+  link: true
+
 getAudioResult:
   type: branch
   addr: 0x00163ce0
