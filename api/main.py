@@ -124,6 +124,9 @@ def text_to_speech():
             formatted_text = formatted_text.replace("\n","").replace("\t","").strip()
             audio_data = tts.singText(formatted_text, pitch, speed, quality, tone, accent, intonation, langId)
 
+        if audio_data is None:
+            raise ValueError("No audio data generated")
+
         # Create a BytesIO object to serve the audio data
         audio_buffer = BytesIO(audio_data)
         audio_buffer.seek(0)

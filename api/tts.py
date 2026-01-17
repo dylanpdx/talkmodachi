@@ -55,7 +55,7 @@ def calcFileLength(bytes):
     fLen = len(bytes)
     return fLen / (16000*2)
 
-def waitForStatus(stat, timeout=60,setLanguage=None):
+def waitForStatus(stat, timeout=15,setLanguage=None):
     current=-1
     start_time = time.time()
     while current != stat:
@@ -147,9 +147,30 @@ def readDebugData():
     text = debugData.decode('utf-16le').replace("\x1b","*")
     print("Debug data: "+text)
 
-def readRenderedAudio():
+def readRenderedAudio(timeout=15, chunk_size=citra.MAX_REQUEST_DATA_SIZE):
+    start_time = time.time()
     job = readJob()
-    data = emu.read_memory(job["audioData"],job["audioSize"])
+    
+    if job["audioSize"] <= 0 or job["audioData"] == 0:
+        return None
+    
+    total_size = job["audioSize"]
+    address = job["audioData"]
+    data = b""
+    bytes_read = 0
+    
+    while bytes_read < total_size:
+        if time.time() - start_time > timeout:
+            raise TimeoutError(f"timeout reading audio data after {bytes_read}/{total_size} bytes")
+        
+        remaining = total_size - bytes_read
+        current_chunk_size = min(chunk_size, remaining)
+        
+        chunk = emu.read_memory(address + bytes_read, current_chunk_size)
+        
+        data += chunk
+        bytes_read += len(chunk)
+    
     return data
 
 def singText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0):
@@ -162,6 +183,8 @@ def singText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0):
         #readDebugData()
 
         data = readRenderedAudio()
+        if data is None:
+            return None
         fullData+=data
 
         emu.write_memory(audioRenderJobAddr,b"\x01") # set status to 1
@@ -172,9 +195,11 @@ def singText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0):
 def generateText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0,language=1):
     waitForStatus(1,setLanguage=language)
     sendText(text,pitch=pitch,speed=speed,quality=quality,tone=tone,accent=accent,intonation=intonation,language=language)
-    waitForStatus(3)
+    waitForStatus(3,timeout=10)
 
     data = readRenderedAudio()
+    if data is None:
+        return None
 
     emu.write_memory(audioRenderJobAddr,b"\x01") # set status to 1
 
