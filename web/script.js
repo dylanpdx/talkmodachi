@@ -266,11 +266,15 @@ function loadVoiceParameters(voice) {
 	}
 	// Set intonation radio button
 	const intonationRadios = document.querySelectorAll('input[type=radio][name=intonation]');
+	const selectedIntonation = voice.intonation || 1;
 	for (const radio of intonationRadios) {
-		if (radio.value == (voice.intonation+1)) {
+		if (radio.value == selectedIntonation) {
 			radio.checked = true;
 		}
 	}
+	// Set language
+	if (voice.lang)
+		voiceLanguageSelect.value = voice.lang;
 }
 
 function saveVoices(voices){
@@ -303,14 +307,16 @@ function populateManageVoices(){
 		<div class="voice">
 			<img src="" class="voiceImg voiceElem" width="50" height="50"/>
 			<span class="voiceName voiceElem">Voice 1</span>
-			<button class="yellow voiceElem">Delete</button>
+			<button class="yellow voiceElem" id="delete-voice">Delete</button>
+			<button class="yellow voiceElem" id="share-voice">Share</button>
         </div>
 		`
 		const voiceDiv = document.createElement('div');
 		voiceDiv.innerHTML = voiceHtml;
 		const voiceName = voiceDiv.querySelector('.voiceName');
 		const voiceImg = voiceDiv.querySelector('.voiceImg');
-		const voiceButton = voiceDiv.querySelector('button');
+		const voiceButton = voiceDiv.querySelector('#delete-voice');
+		const shareButton = voiceDiv.querySelector('#share-voice');
 		voiceName.textContent = voice.name;
 		voiceImg.src = voice.imageUrl;
 		voiceButton.addEventListener('click', function() {
@@ -321,6 +327,12 @@ function populateManageVoices(){
 				saveVoices(voices);
 				populateManageVoices();
 			}
+		});
+		shareButton.addEventListener('click', function() {
+			// Share voice logic
+			const voiceData = encodeURIComponent(JSON.stringify(voice));
+			const shareUrl = `${window.location.origin}${window.location.pathname}?voice=${voiceData}`;
+			prompt("Share this URL to share the voice:", shareUrl);
 		});
 
 		manageVoicesList.appendChild(voiceDiv);
@@ -341,3 +353,22 @@ function populateManageVoices(){
 }
 
 populateManageVoices();
+
+// check for voice in URL
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('voice')) {
+	const voiceData = urlParams.get('voice');
+	try {
+		const voice = JSON.parse(decodeURIComponent(voiceData));
+		// add voice to saved voices
+		let voices = loadVoices();
+		voices.push(voice);
+		saveVoices(voices);
+		populateManageVoices();
+		alert('Voice imported successfully!');
+		window.history.replaceState({}, document.title, window.location.pathname);
+	}
+	catch (e) {
+		console.error('Error loading voice from URL:', e);
+	}
+}
