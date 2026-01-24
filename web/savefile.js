@@ -26,8 +26,24 @@ function getMiis(data,isJP){ // ArrayBuffer
     const miiStructLen = this.region == isJP ? 0x0 : 0x660;
     const voiceOffset = this.region == isJP ? 0x0 : miiAddress+0x10a;
     const miiIdOffset = this.region == isJP ? 0x0 : miiAddress+0xC;
+    const headerMagic = 0x11;
+    const saveSize = 0x1E4C98
+
+    if (data.byteLength != saveSize) {
+        alert("Invalid save file size!");
+        return;
+    }
+
     reader = new dcodeIO.ByteBuffer();
     reader.append(data);
+
+    // read header
+    const magic = reader.readUint8(0);
+    if (magic != headerMagic) {
+        alert("Invalid save file!");
+        return;
+    }
+
     miis=[];
     for (let i = 0; i < 100; i++) {
         const nicknameBytes = reader.readBytes(20,nameAddress+i*miiStructLen).toArrayBuffer();
