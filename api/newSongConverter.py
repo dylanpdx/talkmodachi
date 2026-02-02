@@ -17,6 +17,10 @@ def convertSongToTTS(data):
     for note in notes:
         note["posSec"] = note['pos'] * 60 / bpm
         note['durSec'] = note['durBeats'] * 60 / bpm
+        if 'bend' in note:
+            for bend in note['bend']:
+                bend["pos"] = note['pos'] + bend['pos']
+                bend['posSec'] = bend['pos'] * 60 / bpm
         # add pause if the first note is not at position 0
         if len(songTimeline) == 0 and note['posSec'] > 0:
             songTimeline.append({'type': 'pause', 'length': note['posSec'], 'posSec': 0})
@@ -35,6 +39,10 @@ def convertSongToTTS(data):
         note['note'] = int(utils.noteToHz(note['note']))
 
         songTimeline.append({'type': 'note', 'note': note['note'], 'length': note['durSec'], 'posSec': note['posSec'], 'text': note['text']})
+        if 'bend' in note:
+            noteBends = note['bend']
+            for bend in noteBends:
+                songTimeline.append({'type': 'bend', 'note': int(utils.noteToHz(bend['val'])), 'posSec': bend['posSec']})
         # todo: add bends if they exist
 
     for event in events:
@@ -68,17 +76,33 @@ def convertSongToTTS(data):
     currentSecondaryEvent=0
     lenDiv = (bpm/60)*1000
     bDiv = (bpm/60)*10
+    lastNotePosSec = 0
+    lastNoteBeat = 0
     while currentEvent < totalEvents:
         for i in range(currentEvent,totalEvents):
             event = songTimeline[i]
+            print("Processing event:",event)
             if event['type'] == 'note':
+                print("Current beat:",beat)
                 newbeat=beat+(bDiv*event['length'])
+                if beat==0 and newbeat > 99:
+                    raise Exception("First note exceeds 99 beats, cannot convert",newbeat)
                 if newbeat > 99: # todo: OR EOS event
                     beat=0
                     break
                 print("Note at beat",beat,"with note",event['note'])
                 ttsSong += ttsCommands.command_setSingPitch(beat,event['note'])
+                lastNoteBeat = beat
                 beat = newbeat
+                lastNotePosSec = event['posSec']
+                currentEvent = i + 1
+            elif event['type'] == 'bend':
+                # calculate bend position in beats
+                bendBeat = lastNoteBeat+int((((event['posSec']-lastNotePosSec)/2) * bDiv))
+                print("Bend at beat",bendBeat,"with note",event['note'])
+                if bendBeat >= 100:
+                    raise Exception("Bend exceeds 99 beats when it shouldn't")
+                ttsSong += ttsCommands.command_setSingPitch(bendBeat,event['note'])
                 currentEvent = i + 1
             elif event['type'] == 'pause':
                 beat=0

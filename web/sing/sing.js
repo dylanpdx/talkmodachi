@@ -622,7 +622,7 @@ async function main(){
             const noteText = getNoteText(note);
             const noteBend = [];
             note._bend.forEach((bendi) => {
-                noteBend.push({pos:bendi.pos/beatToPixel, val:bendi.val});
+                noteBend.push({pos:bendi.pos/beatToPixel, val:notes[noteIndex-bendi.val].name});
             });
             // optimize bend points. TODO: more optimization
             let optimizedBend = [];
@@ -793,9 +793,8 @@ async function main(){
             // snap width to grid
             const gridSize = getGridSize();
             width = Math.round(width / (gridSize * beatToPixel)) * (gridSize * beatToPixel);
-
-            // clamp width to minimum of 1 beat and max of 1000
-            width = Math.max(gridSize*beatToPixel, Math.min(10*gridSize*beatToPixel, width));
+            // clamp width to minimum of 1 beat and max of 900px
+            width = Math.max(gridSize*beatToPixel, Math.min(900, width));
 
             const overlappingNote = getAllNotesExcept(resizingNote).find(othernote => doNotePosOverlap(othernote, resizingNote.x, width));
             clearAllNoteTints();
