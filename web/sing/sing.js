@@ -96,7 +96,7 @@ const bendModeButton = document.getElementById('toggleBendModeButton');
 const loadingCover = document.getElementById('loadingCover');
 
 const apiUrl = '/tts';
-let mode='note'; // note= placing notes, event= placing events
+let mode='note'; // note= placing notes, event= placing events, bend=placing/editing bend points
 
 canvElement.oncontextmenu = (e) => {
     return false; // prevent context menu on canvas
@@ -620,7 +620,23 @@ async function main(){
             //const durSec = (60/ getBpm()) * durBeats;
             const noteName = notes[noteIndex].name;
             const noteText = getNoteText(note);
-            cnotes.push({ note: noteName, pos, durBeats,text:noteText });
+            const noteBend = [];
+            note._bend.forEach((bendi) => {
+                noteBend.push({pos:bendi.pos/beatToPixel, val:bendi.val});
+            });
+            // optimize bend points. TODO: more optimization
+            let optimizedBend = [];
+            let lastVal = 0;
+            for (let i = 0; i < noteBend.length; i++) {
+                if (i==0)
+                    continue; // first point will always be 0 internally
+                /*if (noteBend[i].val == lastVal && i != noteBend.length -1 && noteBend[i+1].val == lastVal){ // this is what I mean by "more optimization" but it's WIP
+                    continue;
+                }*/
+                optimizedBend.push(noteBend[i]);
+                lastVal = noteBend[i].val;
+            }
+            cnotes.push({ note: noteName, pos, durBeats,text:noteText, bend:optimizedBend});
         });
         return cnotes;
     }
@@ -805,9 +821,8 @@ async function main(){
             snapBendX = Math.max(0, Math.min(editingBendPoint.note._nWidth, snapBendX)); // clamp to note width
             for (const bendi of editingBendPoint.note._bend) {
                 if (
-                    (bendi.id !== editingBendPoint.bendPointId && approxEqual(bendi.pos, snapBendX)) || // do not allow overlap of bend points
-                    (bendi.id === editingBendPoint.note._bend[editingBendPoint.note._bend.length - 1].id) // do not allow moving the last bend point in x dir
-
+                    (editingBendPoint.bendPointId === editingBendPoint.note._bend[editingBendPoint.note._bend.length - 1].id) || // do not allow moving the last bend point in x dir
+                    (bendi.id !== editingBendPoint.bendPointId && approxEqual(bendi.pos, snapBendX)) // do not allow overlap of bend points
                 ) {
                     snapBendX = editingBendPoint.note._bend.find(bendi => bendi.id === editingBendPoint.bendPointId).pos; // reset to original pos (probably a better way to do this?)
                     break;
