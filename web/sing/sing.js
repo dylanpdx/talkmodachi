@@ -92,6 +92,7 @@ const audioPlayer = document.getElementById('audioPlayer');
 const previewAudioPlayer = document.getElementById('previewAudioPlayer');
 const notesModeButton = document.getElementById('toggleNoteModeButton');
 const eventsModeButton = document.getElementById('toggleEventModeButton');
+const bendModeButton = document.getElementById('toggleBendModeButton');
 const loadingCover = document.getElementById('loadingCover');
 
 const apiUrl = '/tts';
@@ -100,6 +101,10 @@ let mode='note'; // note= placing notes, event= placing events
 canvElement.oncontextmenu = (e) => {
     return false; // prevent context menu on canvas
 };
+
+function genId(){
+    return Math.random().toString(36).substr(2, 9);
+}
 
 function generateSong(songData){
     loadingCover.classList.remove('hidden');
@@ -139,10 +144,17 @@ function toggleMode(newmode){
         eventsMenu.classList.remove('hidden');
         notesModeButton.classList.add('yellow');
         eventsModeButton.classList.remove('yellow');
-    } else {
+        bendModeButton.classList.add('yellow');
+    } else if (mode === 'note') {
         eventsMenu.classList.add('hidden');
         notesModeButton.classList.remove('yellow');
         eventsModeButton.classList.add('yellow');
+        bendModeButton.classList.add('yellow');
+    } else if (mode === 'bend'){
+        eventsMenu.classList.add('hidden');
+        notesModeButton.classList.add('yellow');
+        eventsModeButton.classList.add('yellow');
+        bendModeButton.classList.remove('yellow');
     }
 }
 
@@ -204,6 +216,7 @@ async function main(){
     let placingOffset = 0;
     let resizingNote = null;
     let editingEvent = null;
+    let editingBendPoint = null; // {note:..., bendPointId:...}
     let lastPreviewedNote = null;
     
     const app = new PIXI.Application();
@@ -347,7 +360,7 @@ async function main(){
         notec._nWidth = length; // store original width
         notec._nRect = noteRect; // store rect for resizing
         notec._nBendLine = noteBendLine;
-        notec._bend = [{pos:0,val:0},{pos:length,val:0}]; // default bend
+        notec._bend = [{pos:0,val:0,e:false,id:genId()},{pos:length,val:0,e:false,id:genId()}]; // default bend, pos in pixels, val, e = has been edited, id is unique id
         notec.rerenderBend = function(){
             this._nBendLine.clear();
             let wipLine = this._nBendLine.moveTo(0, noteHeight/2);
@@ -356,7 +369,6 @@ async function main(){
                 wipLine = wipLine.lineTo(bendi.pos,bendY);
             });
             wipLine.stroke({color: defaultNoteBendColor, width: 3, alpha: 1});
-            // at each bend point, draw a circle (debug)
             this._bend.forEach((bendi) => {
                 const bendY = (noteHeight/2) - (bendi.val * (noteHeight));
                 this._nBendLine.beginFill(defaultNoteBendColor);
@@ -379,12 +391,15 @@ async function main(){
                 return true;
             });
             if (this._bend.length === 0 || this._bend[0].pos > 0) {
-                this._bend.unshift({pos:0,val:0});
+                this._bend.unshift({pos:0,val:0,e:false,id:genId()});
                 needRerender = true;
             }
             if (this._bend[this._bend.length - 1].pos < this._nWidth) {
                 lastVal = this._bend.length > 0 ? this._bend[this._bend.length - 1].val : 0;
-                this._bend.push({pos:this._nWidth,val:lastVal});
+                if (lastVal.e)
+                    this._bend.push({pos:this._nWidth,val:lastVal,e:false,id:genId()});
+                else // instead of pushing a new value, just move the last one
+                    this._bend[this._bend.length - 1].pos = this._nWidth;
                 needRerender = true;
             }
 
@@ -400,16 +415,18 @@ async function main(){
         notec.interactive = true;
 
         notec.on('mousedown', (event) => {
-            event.stopPropagation(); // Prevent event bubbling
-            const localPos = event.data.getLocalPosition(pianoTrackContainer);
-            const isResize = (localPos.x - notec.x) >= (notec._nWidth - 5);
-            if (!isResize){
-                notec.cursor = 'grabbing';
-                placingOffset = notec.x - localPos.x;
-                placingNote = notec; // reuse placing logic
-            }else{
-                notec.cursor = 'ew-resize';
-                resizingNote = notec; // set resizing note
+            if (mode === 'note'){
+                event.stopPropagation(); // Prevent event bubbling
+                const localPos = event.data.getLocalPosition(pianoTrackContainer);
+                const isResize = (localPos.x - notec.x) >= (notec._nWidth - 5);
+                if (!isResize){
+                    notec.cursor = 'grabbing';
+                    placingOffset = notec.x - localPos.x;
+                    placingNote = notec; // reuse placing logic
+                }else{
+                    notec.cursor = 'ew-resize';
+                    resizingNote = notec; // set resizing note
+                }
             }
         });
 
@@ -664,6 +681,60 @@ async function main(){
         }else if (mode === 'event') {
             const eventData = getSelectedEvent();
             addEvent(eventData, newPos);
+        }else if (mode === 'bend'){
+            // check if there's a note at this x position
+            const allNotes = getAllNotes();
+            const notec = allNotes.find(note =>localPos.x >= note.x && localPos.x <= (note.x + note._nWidth));
+            if (!notec) {
+                console.warn("No note at this position to add bend point");
+                return;
+            }else{
+                console.log("Found note for bend point", notec);
+            }
+
+            // check if clicked near a bend point
+            const bendLocalX = localPos.x - notec.x;
+            const bendLocalY = localPos.y - notec.y;
+            let selectedBend = null;
+            notec._bend.forEach((bendi) => {
+                const bendY = (noteHeight/2) - (bendi.val * (noteHeight));
+                const dx = bendLocalX - bendi.pos;
+                const dy = bendLocalY - bendY;
+                const distSq = dx*dx + dy*dy;
+                if (distSq <= 25) { // within 5 pixels
+                    selectedBend = bendi;
+                }
+            });
+            if (!selectedBend) {
+                // when *ADDING* a bend, you need to click on the note itself
+                if (bendLocalY >= 0 && bendLocalY <= noteHeight) {
+                    // add a new bend point at the clicked position, with val=0
+                    let snapBendX = bendLocalX;
+                    const gridSize = getGridSize();
+                    snapBendX = Math.round(snapBendX / (gridSize * beatToPixel)) * (gridSize * beatToPixel);
+                    snapBendX = Math.max(0, Math.min(notec._nWidth, snapBendX)); // clamp to note width
+
+                    // if there's already a bend point at this position, skip
+                    for (const bendi of notec._bend) {
+                        if (approxEqual(bendi.pos, snapBendX)) {
+                            return;
+                        }
+                    }
+                    notec._bend.push({pos:snapBendX,val:0,e:true,id:genId()});
+                    notec._bend.sort((a,b) => a.pos - b.pos);
+                    notec.rerenderBend();
+                    selectedBend = notec._bend.find(bendi => approxEqual(bendi.pos, snapBendX));
+                }
+            }
+            if (selectedBend) {
+                if (selectedBend.pos === 0){
+                    return; // the first bend point cannot be moved for technical reasons
+                }
+                editingBendPoint = {note:notec, bendPointId:selectedBend.id};
+            }else{
+                console.warn("Clicked bend point not found");
+                return;
+            }
         }
     };
 
@@ -724,6 +795,36 @@ async function main(){
             });
             resizingNote._nWidth = width; // update stored width
             resizingNote.fillinBend();
+        }else if (editingBendPoint) {
+            const bendLocalX = localPos.x - editingBendPoint.note.x;
+            const bendLocalY = localPos.y - editingBendPoint.note.y;
+            // snap bendLocalX to grid
+            let snapBendX = bendLocalX;
+            const gridSize = getGridSize();
+            snapBendX = Math.round(snapBendX / (gridSize * beatToPixel)) * (gridSize * beatToPixel);
+            snapBendX = Math.max(0, Math.min(editingBendPoint.note._nWidth, snapBendX)); // clamp to note width
+            for (const bendi of editingBendPoint.note._bend) {
+                if (
+                    (bendi.id !== editingBendPoint.bendPointId && approxEqual(bendi.pos, snapBendX)) || // do not allow overlap of bend points
+                    (bendi.id === editingBendPoint.note._bend[editingBendPoint.note._bend.length - 1].id) // do not allow moving the last bend point in x dir
+
+                ) {
+                    snapBendX = editingBendPoint.note._bend.find(bendi => bendi.id === editingBendPoint.bendPointId).pos; // reset to original pos (probably a better way to do this?)
+                    break;
+                }
+            }
+
+            let bendVal = ((noteHeight/2) - bendLocalY) / (noteHeight);
+            bendVal = Math.max(-5, Math.min(5, bendVal)); 
+            bendVal = Math.round(bendVal); // idk if i'll ever support fractional bends
+            const bendPoint = editingBendPoint.note._bend.find(bendi => bendi.id === editingBendPoint.bendPointId);
+            if (bendPoint) {
+                bendPoint.pos = snapBendX;
+                bendPoint.val = bendVal;
+                bendPoint.e = true;
+                editingBendPoint.note._bend.sort((a,b) => a.pos - b.pos);
+                editingBendPoint.note.rerenderBend();
+            }
         }
     }
 
@@ -742,6 +843,8 @@ async function main(){
             lastPreviewedNote = null;
         }else if (resizingNote) {
             resizingNote = null;
+        }else if (editingBendPoint) {
+            editingBendPoint = null;
         }
     }
 
