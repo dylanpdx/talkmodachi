@@ -115,6 +115,8 @@ def text_to_speech():
     if __name__ != '__main__':
         romName = 'US' if data['lang'] == 'useng' else 'EU'
         tts.startEmulator(romName, langId)
+    else:
+        tts.waitForStatus(1,setLanguage=langId)
     try:
         audio_data = None
         if "<lyric" not in text:

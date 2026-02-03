@@ -49,7 +49,7 @@ def writeJobRaw(job,songData=None):
     data = struct.pack(structDef,job["status"],job["bpm"],job["stretch"],job["pitch"],job["speed"],job["quality"],job["tone"],job["accent"],job["intonation"],job["audioSize"],job["audioData"],job["allocatedSize"],job["language"],job["songDataSize"])
     emu.write_memory(audioRenderJobAddr,data)
     if songData is not None:
-        emu.write_memory(audioRenderJobAddr+structSize,songData)
+        emu.write_memory(audioRenderJobAddr+structSize+1,songData)
 
 def calcFileLength(bytes):
     fLen = len(bytes)
@@ -173,12 +173,12 @@ def readRenderedAudio(timeout=15, chunk_size=citra.MAX_REQUEST_DATA_SIZE):
     
     return data
 
-def singText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0):
+def singText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0,language=1):
     lyrics = songConverter.parseSong(text)
     fullData=b""
     for lyric in lyrics:
         waitForStatus(1)
-        sendLyric(lyric,pitch=pitch,speed=speed,quality=quality,tone=tone,accent=accent,intonation=intonation)
+        sendLyric(lyric,pitch=pitch,speed=speed,quality=quality,tone=tone,accent=accent,intonation=intonation,language=language)
         waitForStatus(3)
         #readDebugData()
 
