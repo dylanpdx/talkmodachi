@@ -395,9 +395,11 @@ async function main(){
                 needRerender = true;
             }
             if (this._bend[this._bend.length - 1].pos < this._nWidth) {
-                lastVal = this._bend.length > 0 ? this._bend[this._bend.length - 1].val : 0;
-                if (lastVal.e)
-                    this._bend.push({pos:this._nWidth,val:lastVal,e:false,id:genId()});
+                lastBend = this._bend.length > 0 ? this._bend[this._bend.length - 1] : null;
+                if (lastBend==null) // this should not happen?
+                    return;
+                if (lastBend.e)
+                    this._bend.push({pos:this._nWidth,val:lastBend.val,e:false,id:genId()});
                 else // instead of pushing a new value, just move the last one
                     this._bend[this._bend.length - 1].pos = this._nWidth;
                 needRerender = true;
@@ -704,8 +706,6 @@ async function main(){
             if (!notec) {
                 console.warn("No note at this position to add bend point");
                 return;
-            }else{
-                console.log("Found note for bend point", notec);
             }
 
             // check if clicked near a bend point
