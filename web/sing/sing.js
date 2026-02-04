@@ -285,13 +285,22 @@ async function main(){
         trackRect.beginFill(index % 2 === 0 ? 0xDDDDDD : 0xEEEEEE);
         trackRect.drawRect(0, noteY, 9999, noteHeight);
         trackRect.endFill();
+        trackRect.zIndex = -1;
+        trackRect.interactive = false;
+        pianoRollContainer.addChild(trackRect);
 
         const noteText = new PIXI.Text(note.name, { fontSize: 14, fill: note.b ? 0xFFFFFF : 0x000000 });
         noteText.x = noteX;
         noteText.y = noteY;
         pianoRollContainer.addChild(noteText);
     });
-    pianoTrackContainer.addChild(trackRect);
+
+    const trackBg = new PIXI.Graphics(); // for click detection
+    trackBg.beginFill(0xFFFFFF, 0);
+    trackBg.drawRect(0, 0, 99999, noteHeight*notes.length);
+    trackBg.endFill();
+    trackBg.interactive = true;
+    pianoTrackContainer.addChild(trackBg);
 
     const notePlacementHelper = new PIXI.Text('', { fontSize: 14, fill: 0x000000, fontStyle:'italic' });
     notePlacementHelper.zIndex = 3;
@@ -935,14 +944,26 @@ async function main(){
     // handle scroll wheel
     canvElement.addEventListener('wheel', (event) => {
         event.stopPropagation();
-        if (event.deltaY < 0) {
+        if (event.shiftKey) {
+            if (event.deltaY < 0) {
+                scrollX += beatToPixel*1; // scroll left
+            } else {
+                scrollX -= beatToPixel*1; // scroll right
+            }
+            scrollX = Math.min(0, scrollX); // prevent underscroll
+            pianoTrackContainer.x = noteX + noteWidth + scrollX;
+            trackBg.x = noteX - scrollX;
+            gridLines.x = -scrollX;
+        }else{
+            if (event.deltaY < 0) {
             scrollY += noteHeight*1; // scroll up
-        } else {
-            scrollY -= noteHeight*1; // scroll down
+            } else {
+                scrollY -= noteHeight*1; // scroll down
+            }
+            scrollY = Math.min(0, scrollY); // prevent underscroll
+            // todo: prevent overscroll
+            pianoRollContainer.y = scrollY+topBuffer;
         }
-        scrollY = Math.min(0, scrollY); // prevent underscroll
-        // todo: prevent overscroll
-        pianoRollContainer.y = scrollY+topBuffer;
         app.render();
     });
 
