@@ -194,7 +194,7 @@ button,
 		cursor: pointer;
 	}
 
-	button:disabled {
+	:where(button, .button, .button.yellow):not(:has(:checked)):disabled {
 		--background: #ccc;
 		--topborder: #eee;
 		--reflection: #fff;

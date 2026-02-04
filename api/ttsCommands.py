@@ -64,3 +64,15 @@ def command_setChorusVoices(ratio1, ratio2, ratio3):
     return command_setChorusVoice(0, ratio1) + \
            command_setChorusVoice(1, ratio2) + \
            command_setChorusVoice(2, ratio3)
+
+def command_setStretchMode(mode):
+    if mode not in [0,1,2,3]:
+        raise ValueError("Stretch mode must be 0-3")
+    if mode == 0:
+        return formatMrkCommand(8) # Whole_Word
+    elif mode == 1:
+        return formatMrkCommand(9) # Only_Vowel
+    elif mode == 2:
+        return formatMrkCommand(10) # Only_Top
+    elif mode == 3:
+        return formatMrkCommand(11) # Only_Last

@@ -94,6 +94,11 @@ const notesModeButton = document.getElementById('toggleNoteModeButton');
 const eventsModeButton = document.getElementById('toggleEventModeButton');
 const bendModeButton = document.getElementById('toggleBendModeButton');
 const loadingCover = document.getElementById('loadingCover');
+const saveGenSongButton = document.getElementById('saveGenSongButton');
+const saveButton = document.getElementById('saveSongButton');
+const loadButton = document.getElementById('loadSongButton');
+saveGenSongButton.disabled = true;
+
 
 const apiUrl = '/tts';
 let mode='note'; // note= placing notes, event= placing events, bend=placing/editing bend points
@@ -127,7 +132,22 @@ function generateSong(songData){
 		const audioUrl = URL.createObjectURL(audioBlob);
 		audioPlayer.src = audioUrl;
 		audioPlayer.play();
+        saveGenSongButton.disabled = false;
 	})
+}
+
+function saveGeneratedSong(){
+    const audioSrc = audioPlayer.src;
+    if (!audioSrc) {
+        alert('No generated song to download.');
+        return;
+    }
+    const link = document.createElement('a');
+    link.href = audioSrc;
+    link.download = 'generated_song.mp3';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function previewNote(noteName) {
@@ -271,6 +291,12 @@ async function main(){
         noteText.y = noteY;
         pianoRollContainer.addChild(noteText);
     });
+    pianoTrackContainer.addChild(trackRect);
+
+    const notePlacementHelper = new PIXI.Text('', { fontSize: 14, fill: 0x000000, fontStyle:'italic' });
+    notePlacementHelper.zIndex = 3;
+    pianoTrackContainer.addChild(notePlacementHelper);
+
 
     // play line
     const playLine = new PIXI.Graphics();
@@ -292,7 +318,7 @@ async function main(){
         }
     });
 
-    pianoTrackContainer.addChild(trackRect);
+    
     const gridLines = new PIXI.Graphics();
     function drawGridLines() {
         const gridSize = getGridSize();
@@ -334,6 +360,7 @@ async function main(){
         const allNotes = getAllNotesExcept(placingNote);
         const overlappingNote = allNotes.find(othernote => doNotePosOverlap(othernote, pos, length));
         if (overlappingNote) {
+            console.warn('Cannot place note here, overlapping with another note.');
             return null;
         }
 
@@ -352,9 +379,10 @@ async function main(){
         noteBend.interactiveChildren = false;
         notec.addChild(noteBend);
 
-        const noteText = new PIXI.Text("La", { fontSize: 14, fill: 0x000000 });
+        const noteText = new PIXI.Text("La", { fontSize: 14, fill: 0x000000, fontWeight: 'bold' });
         noteText.x = 0;
         noteText.y = 2;
+        noteText.zIndex = 2;
         notec.addChild(noteText);
 
         notec._nWidth = length; // store original width
@@ -696,6 +724,9 @@ async function main(){
                 previewNote(noteName);
                 lastPreviewedNote = noteName;
             }
+            notePlacementHelper.text = `${noteName}`;
+            notePlacementHelper.x = newPos;
+            notePlacementHelper.y = (noteIndex-1) * noteHeight;
         }else if (mode === 'event') {
             const eventData = getSelectedEvent();
             addEvent(eventData, newPos);
@@ -785,6 +816,9 @@ async function main(){
                 previewNote(noteName);
                 lastPreviewedNote = noteName;
             }
+            notePlacementHelper.text = `${noteName}`;
+            notePlacementHelper.x = newPos;
+            notePlacementHelper.y = (noteIndex-1) * noteHeight;
 
         }else if (resizingNote) {
             let width = resizingNote._nWidth;
@@ -829,7 +863,7 @@ async function main(){
             }
 
             let bendVal = ((noteHeight/2) - bendLocalY) / (noteHeight);
-            bendVal = Math.max(-5, Math.min(5, bendVal)); 
+            bendVal = Math.max(-10, Math.min(10, bendVal)); 
             bendVal = Math.round(bendVal); // idk if i'll ever support fractional bends
             const bendPoint = editingBendPoint.note._bend.find(bendi => bendi.id === editingBendPoint.bendPointId);
             if (bendPoint) {
@@ -860,6 +894,7 @@ async function main(){
         }else if (editingBendPoint) {
             editingBendPoint = null;
         }
+        notePlacementHelper.text = '';
     }
 
     function eventHeaderPointerMove(event) {
@@ -909,6 +944,68 @@ async function main(){
         // todo: prevent overscroll
         pianoRollContainer.y = scrollY+topBuffer;
         app.render();
+    });
+
+    function saveSong(){
+        // save to local storage as "song"
+        const songData = getSongData();
+        localStorage.setItem('song', JSON.stringify(songData));
+    }
+
+    function loadSong(){
+        const songDataStr = localStorage.getItem('song');
+        if (!songDataStr) {
+            alert('No saved song found.');
+            return;
+        }
+        const songData = JSON.parse(songDataStr);
+        setBpm(songData.bpm || 120);
+
+        // clear existing notes and events
+        notesHolder.removeChildren();
+        eventHeadersContainer.removeChildren();
+        eventsHolder.removeChildren();
+        // force update
+        app.render();
+
+
+        // add notes
+        songData.notes.forEach(noteData => {
+            const noteIndex = notes.findIndex(n => n.name === noteData.note);
+            if (noteIndex === -1) {
+                console.warn(`Note ${noteData.note} not found in note list.`);
+                return;
+            }
+            const note = addNote(noteIndex, noteData.pos * beatToPixel, noteData.durBeats);
+            if (!note) {
+                console.warn(`Could not add note ${noteData.note} at pos ${noteData.pos}.`);
+                return;
+            }
+            if (noteData.text) {
+                setNoteText(note, noteData.text);
+            }
+            // set bend points
+            if (noteData.bend) {
+                note._bend = [{pos:0,val:0,e:false,id:genId()}]; // reset bend points
+                noteData.bend.forEach(bendi => {
+                    note._bend.push({pos:bendi.pos * beatToPixel,val:noteIndex-notes.findIndex(n => n.name === bendi.val),e:true,id:genId()});
+                });
+                note._bend.sort((a,b) => a.pos - b.pos);
+                note.rerenderBend();
+            }
+        });
+
+        // add events
+        songData.events.forEach(eventData => {
+            addEvent(eventData, eventData.pos * beatToPixel);
+        });
+    }
+
+    saveButton.addEventListener('click', () => {
+        saveSong();
+    });
+    loadButton.addEventListener('click', () => {
+        loadSong();
     });
 
 }

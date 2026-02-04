@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <script src="pixi.min.js"></script>
     <script src="../utils.js"></script>
-    <link rel="stylesheet" href="../style.css?v=20251004">
-    <link rel="stylesheet" href="style.css?v=20251004">
+    <link rel="stylesheet" href="../style.css?v=20260204">
+    <link rel="stylesheet" href="style.css?v=20260204">
 </head>
 <body style="margin: 0;">
     <audio id="audioPlayer"></audio>
@@ -30,9 +30,12 @@
                 </select>
             </div>
             <button id="playButton" class="yellow">Play</button>
+            <button id="saveGenSongButton" class="yellow button" onclick="saveGeneratedSong()" disabled>Download</button>
             <button id="toggleNoteModeButton" class="yellow" onclick="toggleMode('note')">Edit Notes</button>
             <button id="toggleEventModeButton" class="yellow" onclick="toggleMode('event')">Edit Events</button>
             <button id="toggleBendModeButton" class="yellow" onclick="toggleMode('bend')">Edit Bends</button>
+            <button id="saveSongButton" class="yellow hidden">Save</button>
+            <button id="loadSongButton" class="yellow hidden">Load</button>
         </div>
         <div id="eventsMenu" class="bottom hidden">
             <div class="pill outerpill">
@@ -56,8 +59,8 @@
         </div>
     </div>
     <div id="canv"></div>
-    <script src="events.js?v=20251004"></script>
-    <script src="sing.js?v=20260202"></script>
+    <script src="events.js?v=20260204"></script>
+    <script src="sing.js?v=20260204"></script>
     <script>
         if (window.location.hostname == "localhost" || window.location.hostname == "127.0.0.1"){
             document.getElementById('disclaimerCover').style.display='none';

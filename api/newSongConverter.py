@@ -42,7 +42,7 @@ def convertSongToTTS(data):
         if 'bend' in note:
             noteBends = note['bend']
             for bend in noteBends:
-                songTimeline.append({'type': 'bend', 'note': int(utils.noteToHz(bend['val'])), 'posSec': bend['posSec']})
+                songTimeline.append({'type': 'bend', 'note': int(utils.noteToHz(bend['val'])), 'posSec': bend['posSec']-0.01})
         # todo: add bends if they exist
 
     for event in events:
@@ -87,7 +87,7 @@ def convertSongToTTS(data):
                 newbeat=beat+(bDiv*event['length'])
                 if beat==0 and newbeat > 99:
                     raise Exception("First note exceeds 99 beats, cannot convert",newbeat)
-                if newbeat > 99: # todo: OR EOS event
+                if newbeat > 99: # OR EOS event, done below
                     beat=0
                     break
                 print("Note at beat",beat,"with note",event['note'])
@@ -98,7 +98,7 @@ def convertSongToTTS(data):
                 currentEvent = i + 1
             elif event['type'] == 'bend':
                 # calculate bend position in beats
-                bendBeat = lastNoteBeat+int((((event['posSec']-lastNotePosSec)/2) * bDiv))
+                bendBeat = lastNoteBeat+int((((event['posSec']-lastNotePosSec)/2) * bDiv))-1
                 print("Bend at beat",bendBeat,"with note",event['note'])
                 if bendBeat >= 100:
                     raise Exception("Bend exceeds 99 beats when it shouldn't")
@@ -109,6 +109,10 @@ def convertSongToTTS(data):
                 currentEvent = i + 1 # the actual pause command is handled later
                 break # a pause counts as an eos event, so we break here
             elif event['type'] == 'event':
+                if event['name'] == 'eos':
+                    beat=0
+                    currentEvent = i + 1
+                    break
                 currentEvent = i + 1
         for i in range(currentSecondaryEvent,currentEvent):
             event = songTimeline[i]
@@ -129,7 +133,12 @@ def convertSongToTTS(data):
                     v2ratio = int(vars.get('v2ratio', 0))
                     v3ratio = int(vars.get('v3ratio', 0))
                     ttsSong += ttsCommands.command_setChorusVoices(v1ratio+10000, v2ratio+10000, v3ratio+10000)
+                elif event['name'] == 'stretchmode':
+                    mode = int(vars.get('mode', 0))
+                    ttsSong += ttsCommands.command_setStretchMode(mode)
+                elif event['name'] == 'eos':
+                    ttsSong += ttsCommands.formatCommand("eos",1)
             currentSecondaryEvent = currentEvent
-    ttsSong += ttsCommands.formatCommand("pause",5) + ttsCommands.formatCommandP(21,1000)+ttsCommands.formatCommand("eos",0)
+    ttsSong += ttsCommands.formatCommand("pause",5) + ttsCommands.formatCommandP(21,1000)+ttsCommands.formatCommand("eos",1)
     print("Converted song to TTS format with", len(songTimeline), "events.")
     return ttsSong

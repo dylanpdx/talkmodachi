@@ -53,6 +53,31 @@ const events = {
         },
         i:1,
     },
+    "stretchmode":{
+        "name": "Stretch Mode",
+        "vars": {
+            "mode": {
+                "name": "Mode",
+                "min": 0,
+                "max": 3,
+                "default": 0,
+            },
+        },
+        "color":0x5454FF,
+        "ts": function(e) {
+            return `Stretch Mode: Mode ${e.vars.mode}`;
+        },
+        i:2,
+    },
+    "eos": {
+        "name": "End of Sentence",
+        "vars":[],
+        "color":0xFFA500,
+        "ts": function(e) {
+            return `End of Sentence`;
+        },
+        i:3,
+    },
 }
 
 const addEventSelect = document.getElementById("addEventSelect");
