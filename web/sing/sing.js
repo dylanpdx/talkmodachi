@@ -251,7 +251,9 @@ async function main(){
     const pianoTrackContainer = new PIXI.Container();
     pianoTrackContainer.x = noteX + noteWidth;
     pianoTrackContainer.interactive = true;
+    pianoTrackContainer.name = "pianoTrackContainer";
     pianoRollContainer.addChild(pianoTrackContainer);
+    pianoRollContainer.name = "pianoRollContainer";
 
     const eventHeadersContainer = new PIXI.Container();
     eventHeadersContainer.interactive = true;
@@ -259,17 +261,20 @@ async function main(){
     eventHeadersBg.beginFill(0xFFFFFF, 0.8);
     eventHeadersBg.drawRect(0, 0, 9999, topBuffer);
     eventHeadersBg.endFill();
+    eventHeadersBg.name = "eventHeadersBg";
     eventHeadersContainer.addChild(eventHeadersBg);
+    eventHeadersContainer.name = "eventHeadersContainer";
+    eventHeadersContainer.x=noteWidth;
     app.stage.addChild(eventHeadersContainer);
+    const eventsHolder = new PIXI.Container();
+    eventsHolder.name = "eventsHolder";
+    eventHeadersContainer.addChild(eventsHolder);
 
     // Actual notes
     const notesHolder = new PIXI.Container();
     notesHolder.zIndex = 1;
+    notesHolder.name = "notesHolder";
     pianoTrackContainer.addChild(notesHolder);
-
-    const eventsHolder = new PIXI.Container();
-    eventsHolder.zIndex = 2;
-    pianoTrackContainer.addChild(eventsHolder);
 
     // Draw notes on the left side
     const trackRect = new PIXI.Graphics();
@@ -511,18 +516,17 @@ async function main(){
         const eventLine = new PIXI.Graphics();
         const eventColor=eventDefinition.color || 0xBABABA;
         const text = eventDefinition.ts ? eventDefinition.ts(eventData) : eventDefinition.name;
-        // draw a line from the top of the screen to the bottom
-        eventLine.moveTo(0, 0).lineTo(0, noteHeight*(notes.length)).stroke({color: eventColor, width: 2, alpha: .5});
-        eventLine.x = pos; // position the line at the specified position
-        eventContainer.addChild(eventLine);
+        
 
         const eventHeader = new PIXI.Container();
         eventHeader.interactive = true;
         eventHeader._line = eventLine;
         eventHeader._eventData = eventData;
         const eventHeaderText = new PIXI.Text(text, { fontSize: 14, fill: 0x000000 });
-        eventHeader.x = (pos - (eventHeaderText.width / 2))+noteWidth; // center the text
+        eventHeader.x = pos;
+        eventHeader.pivot.x = eventHeaderText.width/2;
         eventHeader.y = extraDn; // position at the bottom
+        eventHeader._nWidth = eventHeaderText.width;
         const eventHeaderOutline = new PIXI.Graphics();
 
         // draw a rectangle around the text
@@ -530,12 +534,14 @@ async function main(){
         eventHeaderOutline.lineStyle(2, 0x000000);
         eventHeaderOutline.drawRoundedRect(eventHeaderText.x - 5, eventHeaderText.y - 5, eventHeaderText.width + 10, eventHeaderText.height + 10,10);
         eventHeaderOutline.endFill();
-        
+        eventLine.moveTo(0, eventHeaderText.height).lineTo(0, (noteHeight*(notes.length))-eventHeader.y+topBuffer).stroke({color: eventColor, width: 2, alpha: .5});
+
         eventHeader.addChild(eventHeaderOutline);
         eventHeader.addChild(eventHeaderText);
-        eventHeadersContainer.addChild(eventHeader);
-
-        eventsHolder.addChild(eventContainer);
+        eventHeader.addChild(eventLine);
+        eventLine.x = eventHeaderText.width/2;
+        eventLine.y=0;
+        eventsHolder.addChild(eventHeader);
 
         // click events
         
@@ -550,8 +556,7 @@ async function main(){
             event.stopPropagation();
             event.preventDefault(); // Prevent context menu
             // delete the event
-            eventHeadersContainer.removeChild(eventHeader);
-            eventsHolder.removeChild(eventContainer);
+            eventsHolder.removeChild(eventHeader);
         });
 
         eventHeader.on('mouseup', (event) => {
@@ -568,7 +573,7 @@ async function main(){
 
         eventHeader.on('mouseover', (event) => {
             // move the header to the top of the hierarchy
-            eventHeadersContainer.setChildIndex(eventHeader, eventHeadersContainer.children.length - 1);
+            eventsHolder.setChildIndex(eventHeader, eventsHolder.children.length - 1);
         });
 
         /*eventHeader.on('mouseover', (event) => {
@@ -647,7 +652,7 @@ async function main(){
     }
 
     function getAllEvents() {
-        return eventHeadersContainer.children.filter(event => event instanceof PIXI.Container && event._line);
+        return eventsHolder.children.filter(event => event instanceof PIXI.Container && event._line);
     }
     
     function getAllNotesConverted(){
@@ -683,7 +688,7 @@ async function main(){
     function getAllEventsConverted() {
         const cevents = [];
         getAllEvents().forEach((event) => {
-            const pos = event._line.x / beatToPixel;
+            const pos = event.x / beatToPixel;
             const eventData = event._eventData;
             eventData.pos = pos;
             cevents.push(eventData);
@@ -930,13 +935,12 @@ async function main(){
 
     eventHeadersContainer.on('mousemove', event => {
         if (editingEvent) {
-            const localPos = event.data.getLocalPosition(eventHeadersContainer);
+            const localPos = event.data.getLocalPosition(eventsHolder);
             const newPos = Math.max(0, localPos.x); // prevent negative positions
             // snap newPos to grid
             const gridSize = getGridSize();
             const snappedPos = Math.round(newPos / (gridSize * beatToPixel)) * (gridSize * beatToPixel);
-            editingEvent._line.x = snappedPos; // update the line position
-            editingEvent.x = snappedPos - (editingEvent._nWidth / 2) + noteWidth; // center the header text
+            editingEvent.x = snappedPos;
             app.render();
         }
     });
@@ -954,6 +958,7 @@ async function main(){
             pianoTrackContainer.x = noteX + noteWidth + scrollX;
             trackBg.x = noteX - scrollX;
             gridLines.x = -scrollX;
+            eventsHolder.x = scrollX;
         }else{
             if (event.deltaY < 0) {
             scrollY += noteHeight*1; // scroll up
@@ -984,8 +989,7 @@ async function main(){
 
         // clear existing notes and events
         notesHolder.removeChildren();
-        eventHeadersContainer.removeChildren();
-        eventsHolder.removeChildren();
+        eventsHolder.removeChildren()
         // force update
         app.render();
 
