@@ -547,8 +547,6 @@ async function main(){
         
         eventHeader.on('mousedown', (event) => {
             event.stopPropagation(); // Prevent event bubbling
-            const clickedPos = event.data.getLocalPosition(pianoTrackContainer);
-            const eventPos = eventHeader._line.x; // Get the x position of the event line
             editingEvent = eventHeader;
         });
 
@@ -679,6 +677,9 @@ async function main(){
                 }*/
                 optimizedBend.push(noteBend[i]);
                 lastVal = noteBend[i].val;
+            }
+            if (optimizedBend.length == 1 && optimizedBend[0].val == noteName){
+                optimizedBend = [];
             }
             cnotes.push({ note: noteName, pos, durBeats,text:noteText, bend:optimizedBend});
         });
