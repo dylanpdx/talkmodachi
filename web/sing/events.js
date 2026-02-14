@@ -1,3 +1,10 @@
+function evalEventEnum(eventName, varName, value) {
+    if (events[eventName] && events[eventName].vars[varName] && events[eventName].vars[varName].type === "enum") {
+        return events[eventName].vars[varName].enum[value];
+    }
+    return value;
+}
+
 const events = {
     "none":{
         "name": "None",
@@ -8,14 +15,16 @@ const events = {
         "vars": {
             "width": {
                 "name": "Width",
+                "type": "range",
                 "min": 0,
-                "max": 1024,
+                "max": 9000,
                 "default": 0,
             },
             "rate": {
                 "name": "Rate",
+                "type": "range",
                 "min": 0,
-                "max": 5000,
+                "max": 9000,
                 "default": 50,
             },
         },
@@ -30,18 +39,21 @@ const events = {
         "vars": {
             "v1ratio": {
                 "name": "Voice 1 Ratio",
+                "type": "range",
                 "min": 0,
                 "max": 20000,
                 "default": 0,
             },
             "v2ratio": {
                 "name": "Voice 2 Ratio",
+                "type": "range",
                 "min": 0,
                 "max": 20000,
                 "default": 0,
             },
             "v3ratio": {
                 "name": "Voice 3 Ratio",
+                "type": "range",
                 "min": 0,
                 "max": 20000,
                 "default": 0,
@@ -58,14 +70,19 @@ const events = {
         "vars": {
             "mode": {
                 "name": "Mode",
-                "min": 0,
-                "max": 3,
+                "type": "enum",
+                "enum": {
+                    0: "Whole Word",
+                    1: "Only Vowels",
+                    2: "Only Top",
+                    3: "Only Last",
+                },
                 "default": 0,
             },
         },
         "color":0x5454FF,
         "ts": function(e) {
-            return `Stretch Mode: Mode ${e.vars.mode}`;
+            return `Stretch Mode: ${evalEventEnum("stretchmode", "mode", e.vars.mode)}`;
         },
         i:2,
     },
@@ -78,6 +95,25 @@ const events = {
         },
         i:3,
     },
+    "phonetic": {
+        "name": "Phonetic Input",
+        "vars": {
+            "state":{
+                "name": "State",
+                "type": "enum",
+                "enum": {
+                    0: "Off",
+                    1: "On",
+                },
+                "default": 0,
+            },
+        },
+        "color":0x800080,
+        "ts": function(e) {
+            return `Phonetic Input: ${e.vars.state == 0 ? "Off" : "On"}`;
+        },
+        i:4,
+    }
 }
 
 const addEventSelect = document.getElementById("addEventSelect");
@@ -112,28 +148,55 @@ for (const [key, value] of Object.entries(events)) {
             label.textContent = varValue.name;
             label.htmlFor = `${key}-${varKey}`;
             label.className = "pill";
+            let input;
+            let valueDisplay;
+            if (varValue.type === "range") {
+                input = document.createElement("input");
+                input.type = "range";
+                input.className = "slider"
+                input.id = `${key}-${varKey}`;
+                input.min = varValue.min;
+                input.max = varValue.max;
+                input.value = varValue.default;
+
+                valueDisplay = document.createElement("span");
+                valueDisplay.id = `${key}-${varKey}-value`;
+                valueDisplay.textContent = varValue.default;
+                input.addEventListener("input", function() {
+                    valueDisplay.textContent = input.value;
+                });
+                valueDisplay.style.width = "5ch";
+                valueDisplay.style.display = "inline-block";
+                valueDisplay.style.textAlign = "center";
+            }else if (varValue.type === "enum") {
+                // radio buttons
+                input = document.createElement("div");
+                input.className = "radio-group";
+                for (const [enumKey, enumValue] of Object.entries(varValue.enum)) {
+                    const radioLabel = document.createElement("label");
+                    const labelSpan = document.createElement("span");
+                    labelSpan.textContent = enumValue;
+                    radioLabel.appendChild(labelSpan);
+                    radioLabel.className = "yellow button";
+                    const radioInput = document.createElement("input");
+                    radioInput.type = "radio";
+                    radioInput.name = `${key}-${varKey}`;
+                    radioInput.value = enumKey;
+                    if (enumKey == varValue.default) {
+                        radioInput.checked = true;
+                    }
+                    radioLabel.appendChild(radioInput);
+                    input.appendChild(radioLabel);
+                }
+            }
             
-            const input = document.createElement("input");
-            input.type = "range";
-            input.className = "slider"
-            input.id = `${key}-${varKey}`;
-            input.min = varValue.min;
-            input.max = varValue.max;
-            input.value = varValue.default;
             
-            const valueDisplay = document.createElement("span");
-            valueDisplay.id = `${key}-${varKey}-value`;
-            valueDisplay.textContent = varValue.default;
-            input.addEventListener("input", function() {
-                valueDisplay.textContent = input.value;
-            });
-            valueDisplay.style.width = "5ch";
-            valueDisplay.style.display = "inline-block";
-            valueDisplay.style.textAlign = "center";
 
             variableDiv.appendChild(label);
             variableDiv.appendChild(input);
-            variableDiv.appendChild(valueDisplay);
+            if (typeof valueDisplay!=='undefined'){
+                variableDiv.appendChild(valueDisplay);
+            }
         }
         
         document.getElementById("controlsContainer").appendChild(eventDiv);
@@ -153,9 +216,16 @@ function getSelectedEvent() {
             const input = document.getElementById(`${selectedValue}-${evar}`);
             if (input) {
                 eventData.vars[evar] = parseInt(input.value, 10);
+            } else if (value.type === "enum") {
+                const radios = document.getElementsByName(`${selectedValue}-${evar}`);
+                for (const radio of radios) {
+                    if (radio.checked) {
+                        eventData.vars[evar] = parseInt(radio.value, 10);
+                        break;
+                    }
+                }
             }
         }
-        
         return eventData;
     }
     return null;

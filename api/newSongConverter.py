@@ -138,6 +138,12 @@ def convertSongToTTS(data):
                     ttsSong += ttsCommands.command_setStretchMode(mode)
                 elif event['name'] == 'eos':
                     ttsSong += ttsCommands.formatCommand("eos",1)
+                elif event['name'] == 'phonetic':
+                    isOn = int(vars.get('state',0))==1
+                    if isOn:
+                        ttsSong += ttsCommands.formatCommand("toi","nts") # SAMPA
+                    else:
+                        ttsSong += ttsCommands.formatCommand("toi","orth")
             currentSecondaryEvent = currentEvent
     ttsSong += ttsCommands.formatCommand("pause",5) + ttsCommands.formatCommandP(21,1000)+ttsCommands.formatCommand("eos",1)
     print("Converted song to TTS format with", len(songTimeline), "events.")

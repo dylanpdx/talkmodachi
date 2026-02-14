@@ -406,10 +406,32 @@ async function main(){
         notec.rerenderBend = function(){
             this._nBendLine.clear();
             let wipLine = this._nBendLine.moveTo(0, noteHeight/2);
-            this._bend.forEach((bendi) => {
-                const bendY = (noteHeight/2) - (bendi.val * (noteHeight));
-                wipLine = wipLine.lineTo(bendi.pos,bendY);
-            });
+            const lastVibratoEvent = getAllEvents().filter(e => e._eventData.name === "vibrato" && e.x <= notec.x).sort((a,b) => b.x - a.x)[0];
+            for (let i = 0; i < notec._nWidth; i+=.5) {
+                const nextBend = notec._bend.find(b => b.pos >= i);
+                const prevBend = [...notec._bend].reverse().find(b => b.pos <= i);
+                let val = 0;
+                if (nextBend && prevBend) {
+                    if (nextBend.pos === prevBend.pos) {
+                        val = nextBend.val;
+                    } else {
+                        const t = (i - prevBend.pos) / (nextBend.pos - prevBend.pos);
+                        val = prevBend.val + t * (nextBend.val - prevBend.val);
+                    }
+                }
+                let lastVibratoWidth = 0;
+                let lastVibratoRate = 0;
+                if (lastVibratoEvent) {
+                    lastVibratoWidth = lastVibratoEvent._eventData.vars.width || 0;
+                    lastVibratoRate = lastVibratoEvent._eventData.vars.rate || 0;
+                }
+                // convert to pixels
+                const secondsToPixels = (60/getBpm()) * beatToPixel;
+                lastVibratoRate = (1000/lastVibratoRate) * secondsToPixels; // convert to pixels
+                const sinewave = lastVibratoRate > 0 ? Math.sin((i*Math.PI)/lastVibratoRate) * ((noteHeight*5)*(lastVibratoWidth/9000)) : 0;
+                const sinval = sinewave + (val*noteHeight);
+                wipLine = wipLine.lineTo(i, (noteHeight/2) - (sinval));
+            }
             wipLine.stroke({color: defaultNoteBendColor, width: 3, alpha: 1});
             this._bend.forEach((bendi) => {
                 const bendY = (noteHeight/2) - (bendi.val * (noteHeight));
@@ -451,12 +473,14 @@ async function main(){
                 this.rerenderBend();
         }
         notec.fillinBend();
-        notec.rerenderBend();
+        
 
         notec.x = pos;
         notec.y = noteIndex * noteHeight;
         notesHolder.addChild(notec);
         notec.interactive = true;
+
+        notec.rerenderBend();
 
         notec.on('mousedown', (event) => {
             if (mode === 'note'){
@@ -507,14 +531,20 @@ async function main(){
         return notec;
     }
 
+    function rerenderAllNotes(){
+        notesHolder.children.forEach(note => {
+            note.rerenderBend();
+        });
+    }
+
     function addEvent(eventData, pos) {
         if (eventData.name === 'none')
             return; // Skip if none event is selected
         const eventDefinition = events[eventData.name];
-        const extraDn=30 + (-10*eventDefinition.i); // extra distance from the bottom of the screen
-        const eventContainer = new PIXI.Container();
+        const extraDn=30 + (-7*eventDefinition.i); // extra distance from the bottom of the screen
         const eventLine = new PIXI.Graphics();
         const eventColor=eventDefinition.color || 0xBABABA;
+        const eventColorBrightness = Math.round(((((eventColor >> 16) & 0xFF) * 299) + (((eventColor >> 8) & 0xFF) * 587) + ( (eventColor & 0xFF) * 114)) / 1000);
         const text = eventDefinition.ts ? eventDefinition.ts(eventData) : eventDefinition.name;
         
 
@@ -522,7 +552,7 @@ async function main(){
         eventHeader.interactive = true;
         eventHeader._line = eventLine;
         eventHeader._eventData = eventData;
-        const eventHeaderText = new PIXI.Text(text, { fontSize: 14, fill: 0x000000 });
+        const eventHeaderText = new PIXI.Text(text, { fontSize: 14, fill: eventColorBrightness > 128 ? 0x000000 : 0xFFFFFF });
         eventHeader.x = pos;
         eventHeader.pivot.x = eventHeaderText.width/2;
         eventHeader.y = extraDn; // position at the bottom
@@ -555,12 +585,14 @@ async function main(){
             event.preventDefault(); // Prevent context menu
             // delete the event
             eventsHolder.removeChild(eventHeader);
+            rerenderAllNotes();
         });
 
         eventHeader.on('mouseup', (event) => {
             if (editingEvent === eventHeader) {
                 editingEvent = null; // reset editing event
             }
+            rerenderAllNotes();
             /*if (!notec._dbc){
                 notec._dbc = true; // mark as double-click maybe in progress
                 setTimeout(() => { notec._dbc = false; }, 300); // reset after 300ms
@@ -581,6 +613,8 @@ async function main(){
         eventHeader.on('mouseout', () => {
 
         });*/
+
+        rerenderAllNotes();
     }
 
     function getNoteText(note){
@@ -825,7 +859,7 @@ async function main(){
                 return;
             }
             placingNote.y = noteIndex * noteHeight;
-
+            placingNote.rerenderBend();
             const noteName = notes[noteIndex].name;
             if (lastPreviewedNote !== noteName) {
                 previewNote(noteName);
@@ -942,6 +976,7 @@ async function main(){
             const gridSize = getGridSize();
             const snappedPos = Math.round(newPos / (gridSize * beatToPixel)) * (gridSize * beatToPixel);
             editingEvent.x = snappedPos;
+            rerenderAllNotes();
             app.render();
         }
     });
@@ -1017,6 +1052,7 @@ async function main(){
                     note._bend.push({pos:bendi.pos * beatToPixel,val:noteIndex-notes.findIndex(n => n.name === bendi.val),e:true,id:genId()});
                 });
                 note._bend.sort((a,b) => a.pos - b.pos);
+                note.fillinBend();
                 note.rerenderBend();
             }
         });
