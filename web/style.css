@@ -398,6 +398,13 @@ footer {
 	margin-left: 8px;
 }
 
+.footer-right {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-right: 8px;
+}
+
 footer a.button {
 	background: #f60;
 	border: 6px solid;
@@ -415,6 +422,10 @@ footer a.button {
 footer a.button:hover {
 	background: #0ff;
 	border-color: #cff #088 transparent #088;
+}
+
+footer a {
+	align-self: flex-end;
 }
 
 /* TODO: This is a mess lol */
@@ -457,6 +468,7 @@ footer #lensdeer {
 
 	/* Floor */
 	body.tts::after {
+		overflow: hidden;
 		background:
 			radial-gradient(transparent, #ff9 75%),
 			radial-gradient(
@@ -509,6 +521,7 @@ footer #lensdeer {
 
 	/* Background */
 	body.tts::before {
+		overflow: hidden;
 		animation: background 240s infinite linear;
 		background:
 			linear-gradient(
