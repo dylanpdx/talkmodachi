@@ -4,7 +4,6 @@ def formatCommandP(commandCode,param):
     return f"\x1b\\mrk={commandCode}{param:>07}\\"
 
 def formatCommand(commandName,commandCode):
-    commandCode = int(commandCode)
     return f"\x1b\\{commandName}={commandCode}\\"
 
 def formatMrkCommand(commandCode):

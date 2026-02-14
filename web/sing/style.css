@@ -51,3 +51,25 @@
     display: inline-block;
     width: fit-content;
 }
+
+div[id^="event-"] .pill{
+    margin-right: .5em;
+}
+
+.radio-group {
+    display: inline-block;
+}
+
+.radio-group label {
+    display: inline-block;
+    margin-right: .5em;
+    height: 1em;
+    width: fit-content !important;
+    padding:0.1em 0.5em 0.1em !important;
+}
+
+.radio-group label span {
+    font-size: 1em;
+    line-height: 1;
+    position: relative;
+}
