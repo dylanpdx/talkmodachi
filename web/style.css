@@ -298,7 +298,7 @@ button,
 	gap: 10px;
 }
 
-:where(#intonation, #voicetype, #controlsContainer) label {
+:where(#intonation, #voicetype, #singControlsContainer) label {
 	cursor: pointer;
 	height: 1.5em;
 	padding: 0 !important; /* TODO: of course new specificity bs got introduced */
@@ -306,11 +306,11 @@ button,
 	width: 1.5em !important;
 }
 
-:where(#intonation, #voicetype, #controlsContainer) span {
+:where(#intonation, #voicetype, #singControlsContainer) span {
 	line-height: 0.7;
 }
 
-:where(#intonation, #voicetype, #controlsContainer) input[type=radio] {
+:where(#intonation, #voicetype, #singControlsContainer) input[type=radio] {
 	height: 0;
 	opacity: 0;
 	position: absolute;

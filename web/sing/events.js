@@ -199,7 +199,7 @@ for (const [key, value] of Object.entries(events)) {
             }
         }
         
-        document.getElementById("controlsContainer").appendChild(eventDiv);
+        document.getElementById("singControlsContainer").appendChild(eventDiv);
     }
 
     addEventSelect.addEventListener("change", function() {
