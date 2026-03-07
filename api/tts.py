@@ -78,7 +78,7 @@ def startEmulator(romname='US',setLanguage=None):
             with open("/tmp/user/config/sdl2-config.ini", "wb") as f2:
                 f2.write(f.read())
 
-    emulatorProcess = subprocess.Popen(['citra', f'/opt/{romname}.cxi', '-u',str(citra.CITRA_PORT)],cwd="/tmp")
+    emulatorProcess = subprocess.Popen(["timeout","60s",'citra', f'/opt/{romname}.cxi', '-u',str(citra.CITRA_PORT)],cwd="/tmp")
     connected = False
     while not connected:
         try:
