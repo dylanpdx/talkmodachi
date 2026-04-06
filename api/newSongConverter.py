@@ -78,6 +78,7 @@ def convertSongToTTS(data):
     bDiv = (bpm/60)*10
     lastNotePosSec = 0
     lastNoteBeat = 0
+    phonetic=False
     while currentEvent < totalEvents:
         for i in range(currentEvent,totalEvents):
             event = songTimeline[i]
@@ -140,11 +141,15 @@ def convertSongToTTS(data):
                     ttsSong += ttsCommands.formatCommand("eos",1)
                 elif event['name'] == 'phonetic':
                     isOn = int(vars.get('state',0))==1
-                    if isOn:
+                    if isOn and not phonetic:
                         ttsSong += ttsCommands.formatCommand("toi","nts") # SAMPA
-                    else:
+                        phonetic = True
+                    elif not isOn and phonetic:
                         ttsSong += ttsCommands.formatCommand("toi","orth")
+                        phonetic = False
             currentSecondaryEvent = currentEvent
+    if phonetic: # needs to be reset!
+        ttsSong += ttsCommands.formatCommand("toi","orth")
     ttsSong += ttsCommands.formatCommand("pause",5) + ttsCommands.formatCommandP(21,1000)+ttsCommands.formatCommand("eos",1)
     print("Converted song to TTS format with", len(songTimeline), "events.")
     return ttsSong
