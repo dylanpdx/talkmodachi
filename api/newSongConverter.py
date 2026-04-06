@@ -82,7 +82,7 @@ def convertSongToTTS(data):
     while currentEvent < totalEvents:
         for i in range(currentEvent,totalEvents):
             event = songTimeline[i]
-            print("Processing event:",event)
+            #print("Processing event:",event)
             if event['type'] == 'note':
                 print("Current beat:",beat)
                 newbeat=beat+(bDiv*event['length'])
@@ -100,7 +100,7 @@ def convertSongToTTS(data):
             elif event['type'] == 'bend':
                 # calculate bend position in beats
                 bendBeat = lastNoteBeat+int((((event['posSec']-lastNotePosSec)/2) * bDiv))-1
-                print("Bend at beat",bendBeat,"with note",event['note'])
+                #print("Bend at beat",bendBeat,"with note",event['note'])
                 if bendBeat >= 100:
                     raise Exception("Bend exceeds 99 beats when it shouldn't")
                 ttsSong += ttsCommands.command_setSingPitch(bendBeat,event['note'])
@@ -121,7 +121,11 @@ def convertSongToTTS(data):
                 ttsSong += ttsCommands.command_setNextWordLength(int(event['length'] * lenDiv)) + \
                 ttsCommands.formatMrkCommand(30) + " " + event['text'] + ttsCommands.formatMrkCommand(31)
             elif event['type'] == 'pause':
+                if phonetic: # needs to be reset before pause
+                    ttsSong += ttsCommands.formatCommand("toi","orth")
                 ttsSong += ttsCommands.command_createPause(int(event['length'] * lenDiv))
+                if phonetic: # needs to be reset before pause
+                    ttsSong += ttsCommands.formatCommand("toi","nts") # SAMPA
             elif event['type'] == 'event':
                 vars = event['vars']
                 if event['name'] == 'vibrato':
@@ -138,7 +142,11 @@ def convertSongToTTS(data):
                     mode = int(vars.get('mode', 0))
                     ttsSong += ttsCommands.command_setStretchMode(mode)
                 elif event['name'] == 'eos':
+                    if phonetic: # needs to be reset before eos
+                        ttsSong += ttsCommands.formatCommand("toi","orth")
                     ttsSong += ttsCommands.formatCommand("eos",1)
+                    if phonetic: # needs to be reset before eos
+                        ttsSong += ttsCommands.formatCommand("toi","nts") # SAMPA
                 elif event['name'] == 'phonetic':
                     isOn = int(vars.get('state',0))==1
                     if isOn and not phonetic:
@@ -150,6 +158,7 @@ def convertSongToTTS(data):
             currentSecondaryEvent = currentEvent
     if phonetic: # needs to be reset!
         ttsSong += ttsCommands.formatCommand("toi","orth")
+        phonetic = False
     ttsSong += ttsCommands.formatCommand("pause",5) + ttsCommands.formatCommandP(21,1000)+ttsCommands.formatCommand("eos",1)
     print("Converted song to TTS format with", len(songTimeline), "events.")
     return ttsSong
