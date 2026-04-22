@@ -21,7 +21,16 @@
             <section class="controls-container" id="controlsContainer" hidden="true">
                 <div class="twocol">
                     <h2 class="pill">Voice Parameters</h2>
-                    
+                    <div id="voiceengineselect">
+                        <label class="yellow button">
+                            <input type="radio" name="engine" value="1" aria-label="TL/TC" checked>
+                            <span>Engine: TL/TC</span>
+                        </label>
+                        <label class="yellow button">
+                            <input type="radio" name="engine" value="2" aria-label="TL:LTD">
+                            <span>Engine: TL:LTD</span>
+                        </label>
+                    </div>
                     <label for="pitchSlider" class="control">
                         <span class="pill">Pitch</span>
                         <input type="range" min="0" max="100" step="1" value="50" class="slider" id="pitchSlider">

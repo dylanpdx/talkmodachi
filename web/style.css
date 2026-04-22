@@ -222,7 +222,7 @@ button,
 	grid-template-columns: 1fr 1fr;
 }
 
-:where(#controlsContainer, #singControlsContainer) .twocol h2 {
+:where(#controlsContainer, #singControlsContainer) .twocol :where(h2,#voiceengineselect) {
 	grid-column: 1 / 3;
 }
 
@@ -306,11 +306,11 @@ button,
 	width: 1.5em !important;
 }
 
-:where(#intonation, #voicetype, #singControlsContainer) span {
+:where(#intonation, #voicetype, #singControlsContainer,#voiceengineselect) span {
 	line-height: 0.7;
 }
 
-:where(#intonation, #voicetype, #singControlsContainer) input[type=radio] {
+:where(#intonation, #voicetype, #singControlsContainer,#voiceengineselect) input[type=radio] {
 	height: 0;
 	opacity: 0;
 	position: absolute;
@@ -319,6 +319,17 @@ button,
 
 :where(#controlsContainer, #singControlsContainer):not([hidden]) + .buttonContainer {
 	padding-top: 20px;
+}
+
+#voiceengineselect label{
+	align-items: center;
+	display: inline-block;
+}
+
+#voiceengineselect label span{
+	width: 100%;
+	position: relative;
+	font-size: larger;
 }
 
 #status {
