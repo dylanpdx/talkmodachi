@@ -89,6 +89,7 @@ def setRom(name):
     currentRom = name
 
 def startEmulator(romname='US',setLanguage=None):
+    global emulatorProcess
     global currentRom
     setRom(romname)
     # create /tmp/user directory if it doesn't exist
