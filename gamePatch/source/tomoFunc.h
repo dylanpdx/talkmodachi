@@ -23,8 +23,8 @@
 #elif REGION_EU
 #define ADDR_unknown_ptr 0x00acd5a4 // TODO: verify this address
 #define ADDR_ttsGlobal 0x00acd54c
-#define ADDR_newTtsGlobal 0x00107230 // new() for ttsGlobal
-#define ADDR_setupTtsGlobal 0x00107180 // setup function for ttsGlobal
+//#define ADDR_newTtsGlobal 0x00107230 // new() for ttsGlobal
+//#define ADDR_setupTtsGlobal 0x00107180 // setup function for ttsGlobal
 #define ADDR_setupFunc 0x00391788
 #define ADDR_doTTS 0x00191ef0
 #define ADDR_msbtToText 0x003d3c9c
@@ -41,7 +41,46 @@
 #define ADDR_repairSingingParams 0x007457b8
 #define ADDR_RESET_TTS 0x001be0d0
 #elif REGION_KR
-
+#define ADDR_unknown_ptr 0x00aef67c
+#define ADDR_ttsGlobal 0x00aef624
+//#define ADDR_newTtsGlobal 0x0
+//#define ADDR_setupTtsGlobal 0x0
+#define ADDR_setupFunc 0x003915e0
+#define ADDR_doTTS 0x00191f2c
+#define ADDR_msbtToText 0x003d3a08
+#define ADDR_textToEffects 0x00746f74
+#define ADDR_generateMrk 0x007439d8
+#define ADDR_getIsMouthOpenAtSampleTime 0x007467d8
+#define ADDR_setVoicePitch 0x003913f4
+#define ADDR_setVoiceSpeed 0x00391404
+#define ADDR_setVoiceQuality 0x003913e4
+#define ADDR_setVoiceTone 0x00391434
+#define ADDR_setVoiceAccent 0x00391414
+#define ADDR_setVoiceIntonation 0x00391424
+#define ADDR_setupSingingParams 0x00743b64
+#define ADDR_repairSingingParams 0x007478e8
+#define ADDR_RESET_TTS 0x001be254
+#elif REGION_JP
+#define ADDR_unknown_ptr 0x0
+#define ADDR_ttsGlobal 0x008f7c64
+//#define ADDR_newTtsGlobal 0x0
+//#define ADDR_setupTtsGlobal 0x0
+#define ADDR_setupFunc 0x0021c730
+#define ADDR_set_tts_text 0x0021c7f4 // this is not exclusive to the JP rom, but it's the easiest place i found to inject custom text
+#define ADDR_doTTS 0x0021c6cc
+#define ADDR_msbtToText 0x0
+#define ADDR_textToEffects 0x0
+#define ADDR_generateMrk 0x0
+#define ADDR_getIsMouthOpenAtSampleTime 0x0
+#define ADDR_setVoicePitch 0x0021c47c
+#define ADDR_setVoiceSpeed 0x0021c498
+#define ADDR_setVoiceQuality 0x0021c428
+#define ADDR_setVoiceTone 0x0021c4ec
+#define ADDR_setVoiceAccent 0x0021c4b4
+#define ADDR_setVoiceIntonation 0x0021c4d0
+#define ADDR_setupSingingParams 0x0
+#define ADDR_repairSingingParams 0x0
+#define ADDR_RESET_TTS 0x0
 #endif
 
 typedef struct {
@@ -58,8 +97,16 @@ typedef void setupTtsGlobal(ttsGlobal* ttsGlob);
 static setupTtsGlobal* setupTtsGlobalFunc = (setupTtsGlobal*)ADDR_setupTtsGlobal;
 #endif
 
+#ifndef REGION_JP
 typedef uint doTTS(int *param_1,int param_2,ttsInput *param_3);
+#else
+typedef uint doTTS(ttsGlobal *ttsGlobal);
+typedef uint setTtsText(ttsGlobal *ttsGlobal,uint16_t* utf16text);
+
+static setTtsText* setTtsTextFunc = (setTtsText*)ADDR_set_tts_text;
+#endif
 static doTTS* ttsFunc = (doTTS*)ADDR_doTTS;
+
 
 // converts MSBT codes to xml-like text describing the effects applied to the audio
 typedef void msbtToText(void* functionTable,char* output,int* outputSize,int unknown,short* msbtData,int msbtDataSize); // unknown is always 0x200; functionTable is always (DAT_00acb5a4 + 0x10);

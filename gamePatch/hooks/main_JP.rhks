@@ -1,0 +1,23 @@
+mainloop:
+  type: branch
+  addr: 0x00104c7c
+  func: mainLoopF
+  link: false
+
+noThreads:
+  type: branch
+  addr: 0x0019b948
+  func: noThreadsPlease
+  link: false
+
+getAudioResult:
+  type: branch
+  addr: 0x00606690
+  func: audioDataGetAsm
+  link: true
+
+getAudioResult2:
+  type: branch
+  addr: 0x0060669c
+  func: audioDataGetAsm
+  link: true

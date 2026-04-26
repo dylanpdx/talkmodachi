@@ -15,6 +15,7 @@ typedef struct {
     audioEffectsParams *effects;
 } ttsClass; // ingame size: 0x6a10
 
+#ifndef REGION_JP
 struct ttsGlobal_vtable {
     void (*free_ttsClass)(void *); // ttsGlobal*
     void *field1_0x4;
@@ -33,6 +34,20 @@ typedef struct {
     undefined field12_0xf;
     int field13_0x10;
 } ttsGlobal; // ingame size: 0x14
+#else
+typedef struct {
+    PADDING(0x0,0x96);
+    bool isBusy;
+    PADDING(0x97,0xA0);
+    int unknown;
+    uint16_t converted_text;
+} ttsData; // ingame size: 0xbc
+
+typedef struct {
+    void* vtable;
+    ttsData* data;
+} ttsGlobal; // ingame size: 0x10
+#endif
 
 typedef struct {
     int effectCodes[131];

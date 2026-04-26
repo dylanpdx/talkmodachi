@@ -3,6 +3,7 @@ from io import BytesIO
 import citra,utils
 from flask_cors import CORS
 import newSongConverter
+import pykakasi
 
 if __name__ != '__main__':
     citra.CITRA_PORT = utils.findFreePort()
@@ -40,14 +41,21 @@ def sing():
     tone = int(request.args.get('tone', 50))
     accent = int(request.args.get('accent', 50))
     intonation = int(request.args.get('intonation', 1))
-    lang = request.args.get('lang', 'useng')
-
+    lang=data.get('lang','useng')
     data = newSongConverter.convertSongToTTS(data)
 
     try:
         langId = langToId(lang)
         if __name__ != '__main__':
-            romName = 'US' if lang == 'useng' else 'EU'
+            match lang:
+                case 'useng':
+                    romName = 'US'
+                #case 'jp':
+                #    romName = "JP"
+                case 'kr':
+                    romName = "KR"
+                case _:
+                    romName = "EU"
             
             tts.startEmulator(romName,langId)
 
@@ -86,10 +94,22 @@ def text_to_speech():
         'intonation': request.args.get('intonation', 1),
         'lang': request.args.get('lang', 'useng')  # Default to US English
     }
+
+    limit = 2000
+    if data['lang'] == "jp":
+        limit = 1024 # technical limitation of the engine?
     
     if not data or 'text' not in data or data['text'] is None:
         return jsonify({'error': 'Missing text parameter'}), 400
-    if len(data['text']) > 2000:
+    
+    if data['lang'] == "jp":
+        k = pykakasi.kakasi()
+        converted = k.convert(data['text'])
+        data['text'] = ""
+        for result in converted:
+            data['text']+=result["kana"]
+
+    if len(data['text']) > limit:
         return jsonify({'error': 'Text too long'}), 400
     text = data['text'].replace('\n', '')
     
@@ -107,15 +127,24 @@ def text_to_speech():
         return jsonify({'error': 'Invalid parameter values'}), 400
     intonation = intonation - 1 # convert to 0-based index
 
-    if data['lang'] not in ['useng', 'eueng', 'es', 'de', 'fr', 'it']:
+    if data['lang'] not in ['useng', 'eueng', 'es', 'de', 'fr', 'it', 'jp', 'kr']:
         return jsonify({'error': 'Invalid language specified'}), 400
 
     formatted_text = text
     langId = langToId(data['lang'])
+    match data['lang']:
+        case 'useng':
+            romName = 'US'
+        case 'jp':
+            romName = "JP"
+        case 'kr':
+            romName = "KR"
+        case _:
+            romName = "EU"
     if __name__ != '__main__':
-        romName = 'US' if data['lang'] == 'useng' else 'EU'
         tts.startEmulator(romName, langId)
     else:
+        tts.setRom(romName)
         tts.waitForStatus(1,setLanguage=langId)
     try:
         audio_data = None

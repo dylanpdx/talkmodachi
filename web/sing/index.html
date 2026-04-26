@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <script src="pixi.min.js"></script>
     <script src="../utils.js"></script>
-    <link rel="stylesheet" href="../style.css?v=20260216-2">
-    <link rel="stylesheet" href="style.css?v=20260216-2">
+    <link rel="stylesheet" href="../style.css?v=20260426">
+    <link rel="stylesheet" href="style.css?v=20260426">
 </head>
 <body style="margin: 0;">
     <audio id="audioPlayer"></audio>
@@ -27,6 +27,19 @@
                     <option value="1/8">1/8</option>
                     <option value="1/12">1/12</option>
                     <option value="1/16">1/16</option>
+                </select>
+            </div>
+            <div class="pill outerpill">
+                <span class="pill">Language</span>
+                <select id="langSelect">
+                    <option value="useng" selected>🇺🇸 US English</option>
+                    <option value="eueng">🇪🇺 EU English</option>
+                    <option value="es">🇪🇸 Spanish</option>
+                    <option value="de">🇩🇪 German</option>
+                    <option value="fr">🇫🇷 French</option>
+                    <option value="it">🇮🇹 Italian</option>
+                    <option value="kr">🇰🇷 Korean</option>
+                    <option value="jp" disabled>🇯🇵 Japanese (TC)</option>
                 </select>
             </div>
             <button id="playButton" class="yellow">Play</button>
@@ -59,8 +72,8 @@
         </div>
     </div>
     <div id="canv"></div>
-    <script src="events.js?v=20260216"></script>
-    <script src="sing.js?v=20260214"></script>
+    <script src="events.js?v=20260426"></script>
+    <script src="sing.js?v=20260426"></script>
     <script>
         if (window.location.hostname == "localhost" || window.location.hostname == "127.0.0.1"){
             document.getElementById('disclaimerCover').style.display='none';

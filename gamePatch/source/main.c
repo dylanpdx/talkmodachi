@@ -26,8 +26,15 @@ typedef struct{
 	short songData[255];
 } audioRenderJob;
 
-#define textDataLoc 0x00b27daa // random unused (hopefully) memory location
-audioRenderJob* audioJob = (audioRenderJob*)0x00af340d; // other unused memory location
+#ifndef REGION_JP
+	#define audioRenderJobLoc 0x00af340d // other unused memory location
+	#define textDataLoc (audioRenderJobLoc+0x3499D) // random unused (hopefully) memory location
+#else
+	#define audioRenderJobLoc 0x0090a27a // other unused memory location
+	#define textDataLoc (audioRenderJobLoc+0x258) // random unused (hopefully) memory location
+#endif
+
+audioRenderJob* audioJob = (audioRenderJob*)audioRenderJobLoc; 
 
 #define debugDataLoc 0x004110f0
 
@@ -61,6 +68,8 @@ int getSysRegion(){
 	return 0x1;
 	#elif REGION_EU
 	return 0x2;
+	#else
+	return 0x1;
 	#endif
 }
 
@@ -122,7 +131,11 @@ uint16_t* utfRecv(uint16_t* in,int* len){
 void callTTS(uint16_t* text){
 	int textSize = wcslen(text)*2;
 	ttsGlobal* ttsGlob = getTtsGlobal();
+	#ifndef REGION_JP
 	RESET_TTSFunc(ttsGlob->mainTtsClass->effects);
+	#else
+	setTtsTextFunc(ttsGlob,(uint16_t*)textDataLoc);
+	#endif
 
 	// write text length to debugDataLoc
 	//*(int*)debugDataLoc = textSize;
@@ -142,8 +155,10 @@ void callTTS(uint16_t* text){
 	}
 
 	// setup
-	setupTTS();
+	//setupTTS();
+	((void(*)(int*))ADDR_setupFunc)((int*)ttsGlob);
 
+	#ifndef REGION_JP
 	ttsInput* tts = (ttsInput*)tmalloc(sizeof(ttsInput));
 	tts->unknown = 0;
 	tts->textInputLen = textSize;
@@ -152,10 +167,17 @@ void callTTS(uint16_t* text){
 	uint r = ttsFunc(ttsPtr,ttsNumber,tts);
 	// we have finished rendering the audio
 	tfree(tts);
+	#else
+	ttsFunc(ttsGlob);
+	#endif
 
 	if (audioJob->status !=ERROR){
 		audioJob->status = PROCESSING_FINISHED;
 	}
+	#ifdef REGION_JP
+	ttsGlob->data->isBusy=false;
+	#endif
+	
 }
 
 void saveTtsSettings(int* ptr){
@@ -174,9 +196,11 @@ void saveTtsSettings(int* ptr){
 }
 
 void mainLoopF(){
+	#ifndef REGION_JP
 	int sz = 0;
 	int* ptr = (int*)((int*)ADDR_unknown_ptr)[0];
 	int loadedLang = getSysLang();
+	#endif
 
 	audioJob->status = WAITING_FOR_TEXT;
 	while(true){
@@ -195,12 +219,12 @@ void mainLoopF(){
 
 			// save the text data
 			int textSize = 0;
-			//uint16_t* text = utfTo16((char*)textDataLoc,&textSize);
 			uint16_t* text = utfRecv((uint16_t*)textDataLoc,&textSize);
 
 			if (audioJob->songDataSize == 0){
 				callTTS(text);
 			}else{
+				#ifndef REGION_JP
 				singingParams* effectsDataLoc = tmalloc(0x1000);
 				uint16_t* mrkDataLoc = tmalloc(0x1000);
 				// zero effectsDataLoc
@@ -222,8 +246,10 @@ void mainLoopF(){
 
 				tfree(effectsDataLoc);
 				tfree(mrkDataLoc);
+				#else
+				audioJob->status = ERROR;
+				#endif
 			}
-
 			tfree(text);
 		}
 	}

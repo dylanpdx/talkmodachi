@@ -16,3 +16,10 @@ audioDataGetAsm:
     bl audioDataGet
     pop {r0-r4,lr}
     bx lr @ Return
+
+.global noThreadsPlease
+noThreadsPlease:
+    mov r12, #0x1
+    strb r12, [r0, r4]
+    ldr pc, [pc, #-4]
+    .word 0x0019b94c

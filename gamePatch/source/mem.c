@@ -10,6 +10,9 @@
 #elif REGION_KR
 #define MALLOC_ADDR 0x0012974c
 #define FREE_ADDR 0x0011d9e8
+#elif REGION_JP
+#define MALLOC_ADDR 0x00128d70
+#define FREE_ADDR 0x0011ca58
 #endif
 
 void* tmalloc(int size){

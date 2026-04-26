@@ -85,6 +85,7 @@ const notes = [
     {"name":"C1","b":false}*/
 ]
 const gridSelect = document.getElementById('gridSelect');
+const langSelect = document.getElementById('langSelect');
 const bpmInput = document.getElementById('bpmInput');
 const canvElement = document.getElementById('canv');
 const playButton = document.getElementById('playButton');
@@ -955,6 +956,7 @@ async function main(){
             bpm: getBpm(),
             notes: getAllNotesConverted(),
             events: getAllEventsConverted(),
+            lang: langSelect.value
         };
         return songData;
     }
