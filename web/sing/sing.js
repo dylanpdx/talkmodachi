@@ -1,26 +1,4 @@
 const notes = [
-    /*{"name":"B7","b":false},
-    {"name":"A#7","b":true},
-    {"name":"A7","b":false},
-    {"name":"G#7","b":true},
-    {"name":"G7","b":false},
-    {"name":"F#7","b":true},
-    {"name":"F7","b":false},
-    {"name":"E7","b":false},
-    {"name":"D#7","b":true},
-    {"name":"D7","b":false},
-    {"name":"C#7","b":true},
-    {"name":"C7","b":false},
-    {"name":"B6","b":false},
-    {"name":"A#6","b":true},
-    {"name":"A6","b":false},
-    {"name":"G#6","b":true},
-    {"name":"G6","b":false},
-    {"name":"F#6","b":true},
-    {"name":"F6","b":false},
-    {"name":"E6","b":false},
-    {"name":"D#6","b":true},
-    {"name":"D6","b":false},*/
     {"name":"C#6","b":true},
     {"name":"C6","b":false},
     {"name":"B5","b":false},
@@ -46,7 +24,7 @@ const notes = [
     {"name":"D#4","b":true},
     {"name":"D4","b":false},
     {"name":"C#4","b":true},
-    {"name":"C4","b":false},
+    {"name":"C4","b":false}, // 60
     {"name":"B3","b":false},
     {"name":"A#3","b":true},
     {"name":"A3","b":false},
@@ -76,13 +54,6 @@ const notes = [
     {"name":"A1","b":false},
     {"name":"G#1","b":true},
     {"name":"G1","b":false},
-    /*{"name":"F#1","b":true},
-    {"name":"F1","b":false},
-    {"name":"E1","b":false},
-    {"name":"D#1","b":true},
-    {"name":"D1","b":false},
-    {"name":"C#1","b":true},
-    {"name":"C1","b":false}*/
 ]
 const gridSelect = document.getElementById('gridSelect');
 const langSelect = document.getElementById('langSelect');
@@ -98,6 +69,7 @@ const loadingCover = document.getElementById('loadingCover');
 const saveGenSongButton = document.getElementById('saveGenSongButton');
 const saveButton = document.getElementById('saveSongButton');
 const loadButton = document.getElementById('loadSongButton');
+const importButton = document.getElementById('importButton')
 saveGenSongButton.disabled = true;
 
 
@@ -368,7 +340,7 @@ async function main(){
 
     }
 
-    function addNote(noteIndex,pos,length){
+    function addNote(noteIndex,pos,length,text="La"){
         length = length * beatToPixel;
 
         // check if there's already a note at this position
@@ -394,7 +366,7 @@ async function main(){
         noteBend.interactiveChildren = false;
         notec.addChild(noteBend);
 
-        const noteText = new PIXI.Text("La", { fontSize: 14, fill: 0x000000, fontWeight: 'bold' });
+        const noteText = new PIXI.Text(text, { fontSize: 14, fill: 0x000000, fontWeight: 'bold' });
         noteText.x = 0;
         noteText.y = 2;
         noteText.zIndex = 2;
@@ -1072,5 +1044,54 @@ async function main(){
         loadSong();
     });
 
+    function parseEntry(entry){
+        entry = entry.trim();
+        eq = entry.indexOf('=')
+        const key = entry.substring(0,eq);
+        const value = entry.substring(eq+1)
+        return {"key":key,"value":value}
+    }
+
+    importButton.addEventListener('click',()=>{
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.click();
+        input.onchange = async e => { 
+            var file = e.target.files[0];
+            const txt = await file.text();
+            const j = USTParser.ustToJSON(txt);
+            let nn=0;
+            let cl = 0;
+            for (part of j){
+                if (typeof part.section === "number" && "entries" in part){
+                    // probably a note
+                    length=-1;
+                    note=-1;
+                    lyric=undefined
+                    for (entry of part.entries._){
+                        const parsed = parseEntry(entry)
+                        if (parsed.key === "NoteNum"){
+                            const v = 85-parseInt(parsed.value);
+                            note=v;
+                        }else if (parsed.key === "Length"){
+                            length = parseInt(parsed.value)/480;
+                        }else if (parsed.key === "Lyric"){
+                            lyric = parsed.value;
+                        }
+                        
+                    }
+                    if (length != -1 && note != -1){
+                        console.log(length)
+                        if (lyric !== "R")
+                            addNote(note, cl * beatToPixel, length,lyric);
+                        nn++;
+                        cl+=length
+                    }
+                }
+                if (nn>40)
+                    break;
+            }
+        }
+    })
 }
 main();
