@@ -72,7 +72,6 @@ const loadButton = document.getElementById('loadSongButton');
 const importButton = document.getElementById('importButton')
 saveGenSongButton.disabled = true;
 
-
 const apiUrl = '/tts';
 let mode='note'; // note= placing notes, event= placing events, bend=placing/editing bend points
 
@@ -205,6 +204,10 @@ async function main(){
     const beatToPixel = 100; // 1 beat = 100 pixels
     const defaultNoteColor = 0xC0C0FF;
     const defaultNoteBendColor = 0x8080FF;
+    const scrollBuff = 200;
+
+    const progressBarHeight = 20;
+
     let placingNote = null;
     let placingOffset = 0;
     let resizingNote = null;
@@ -227,6 +230,45 @@ async function main(){
     pianoTrackContainer.name = "pianoTrackContainer";
     pianoRollContainer.addChild(pianoTrackContainer);
     pianoRollContainer.name = "pianoRollContainer";
+
+    // progress bar container
+    const progressBarBg = new PIXI.Graphics();
+    progressBarBg.name = "progressBar"
+    progressBarBg.beginFill(0x0,.5);
+    progressBarBg.drawRect(0,0,99999,progressBarHeight);
+    progressBarBg.endFill();
+    progressBarBg.pivot.y = progressBarHeight;
+    progressBarBg.position.x = noteWidth
+    progressBarBg.position.y = app.canvas.height
+    progressBarBg.interactive = true;
+    app.stage.addChild(progressBarBg);
+
+    const progressBarThingy = new PIXI.Graphics();
+    const thingySize = 20;
+    let thingyPos = 0;
+    progressBarThingy.name = "progressBarThingy"
+    progressBarThingy.beginFill(0x0);
+    progressBarThingy.drawRect(0,0,thingySize,progressBarHeight);
+    progressBarThingy.endFill();
+    progressBarThingy.position.x = 0
+    progressBarThingy.position.y = 0
+    progressBarBg.addChild(progressBarThingy);
+    function setProgressThingyPos(pct){
+        thingyPos = pct;
+        progressBarThingy.position.x = Math.min(app.canvas.width-progressBarBg.position.x-thingySize,app.canvas.width*pct);
+    }
+    function updateProgressThingy(){
+        console.log("upt");
+        setProgressThingyPos(thingyPos);
+    }
+    window.addEventListener('resize',()=>{
+        setTimeout(() => {
+            progressBarBg.position.y = app.canvas.height;
+            updateProgressThingy();
+        }, 10);
+    })
+    
+
 
     const eventHeadersContainer = new PIXI.Container();
     eventHeadersContainer.interactive = true;
@@ -499,6 +541,7 @@ async function main(){
             event.preventDefault(); // Prevent context menu
             // delete the note
             notesHolder.removeChild(notec);
+            setProgressThingyPos((-scrollX)/getMaxScroll());
         });
 
         return notec;
@@ -917,6 +960,7 @@ async function main(){
             editingBendPoint = null;
         }
         notePlacementHelper.text = '';
+        setProgressThingyPos((-scrollX)/getMaxScroll());
     }
 
     function eventHeaderPointerMove(event) {
@@ -931,6 +975,15 @@ async function main(){
             lang: langSelect.value
         };
         return songData;
+    }
+
+    function getMaxNotePos(){
+        const songData = getSongData();
+        return Math.max(...songData.notes.map(x=>x.pos+x.durBeats))
+    }
+
+    function getMaxScroll(){
+        return ((getMaxNotePos()*beatToPixel))-scrollBuff;
     }
 
     playButton.addEventListener('click', () => {
@@ -955,16 +1008,29 @@ async function main(){
         }
     });
 
+    
     // handle scroll wheel
     canvElement.addEventListener('wheel', (event) => {
         event.stopPropagation();
         if (event.shiftKey) {
+            prevScrollX = scrollX;
             if (event.deltaY < 0) {
                 scrollX += beatToPixel*1; // scroll left
             } else {
                 scrollX -= beatToPixel*1; // scroll right
             }
             scrollX = Math.min(0, scrollX); // prevent underscroll
+            const maxScroll = getMaxScroll();
+            if (-scrollX >= maxScroll){
+                if (-prevScrollX >= maxScroll)
+                    scrollX = maxScroll;
+                else
+                {
+                    scrollX = prevScrollX // prevent overscroll
+                    return;
+                }
+            }
+            setProgressThingyPos((-scrollX)/maxScroll)
             pianoTrackContainer.x = noteX + noteWidth + scrollX;
             trackBg.x = noteX - scrollX;
             gridLines.x = -scrollX;
