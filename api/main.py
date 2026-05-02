@@ -42,7 +42,7 @@ def sing():
     accent = int(request.args.get('accent', 50))
     intonation = int(request.args.get('intonation', 1))
     lang=data.get('lang','useng')
-    data = newSongConverter.convertSongToTTS(data)
+    data,expectedLen = newSongConverter.convertSongToTTS(data)
 
     try:
         langId = langToId(lang)
@@ -59,7 +59,7 @@ def sing():
             
             tts.startEmulator(romName,langId)
 
-        audio_data = tts.generateText(data, pitch, speed, quality, tone, accent, intonation,language=langId)
+        audio_data = tts.generateText(data, pitch, speed, quality, tone, accent, intonation,language=langId,trim=expectedLen)
         audio_buffer = BytesIO(audio_data)
         audio_buffer.seek(0)
         

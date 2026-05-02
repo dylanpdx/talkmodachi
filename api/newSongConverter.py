@@ -30,8 +30,7 @@ def convertSongToTTS(data):
             if lastNote['type'] == 'note' and note['posSec'] > lastNote['posSec'] + lastNote['length']:
                 plen = note['posSec'] - (lastNote['posSec'] + lastNote.get('length', 1))
                 ppos = lastNote['posSec'] + lastNote.get('length', 1)
-                # if pause is less than 1 beat, skip it
-                if plen >= 1 / bpm:
+                if plen >= 0.01 / bpm:
                     songTimeline.append({'type': 'pause', 'length': plen, 'posSec': ppos})
         ## add note
 
@@ -74,9 +73,11 @@ def convertSongToTTS(data):
     totalEvents= len(songTimeline)
     currentEvent=0
     currentSecondaryEvent=0
-    lenDiv = (bpm/60)*1000
-    bDiv = (bpm/60)*10
+    bMult = 9.68
+    lenDiv = (bpm/60)*(100*bMult)
+    bDiv = (bpm/60)*bMult
     lastNotePosSec = 0
+    lastNoteEnd=0;
     lastNoteBeat = 0
     phonetic=False
     while currentEvent < totalEvents:
@@ -86,9 +87,9 @@ def convertSongToTTS(data):
             if event['type'] == 'note':
                 print("Current beat:",beat)
                 newbeat=beat+(bDiv*event['length'])
-                if beat==0 and newbeat > 99:
+                if beat==0 and newbeat > 99: # hard limit by the tts engine!
                     raise Exception("First note exceeds 99 beats, cannot convert",newbeat)
-                if newbeat > 99: # OR EOS event, done below
+                if newbeat > 99: # OR EOS event, done below; hard limit by the tts engine!
                     beat=0
                     break
                 print("Note at beat",beat,"with note",event['note'])
@@ -96,6 +97,7 @@ def convertSongToTTS(data):
                 lastNoteBeat = beat
                 beat = newbeat
                 lastNotePosSec = event['posSec']
+                lastNoteEnd = lastNotePosSec+event['length']
                 currentEvent = i + 1
             elif event['type'] == 'bend':
                 # calculate bend position in beats
@@ -159,6 +161,6 @@ def convertSongToTTS(data):
     if phonetic: # needs to be reset!
         ttsSong += ttsCommands.formatCommand("toi","orth")
         phonetic = False
-    ttsSong += ttsCommands.formatCommand("pause",5) + ttsCommands.formatCommandP(21,1000)+ttsCommands.formatCommand("eos",1)
-    print("Converted song to TTS format with", len(songTimeline), "events.")
-    return ttsSong
+    ttsSong += ttsCommands.formatCommand("eos",1)
+    print("Converted song to TTS format with", len(songTimeline), "events & expected len of "+str(lastNoteEnd))
+    return ttsSong,lastNoteEnd

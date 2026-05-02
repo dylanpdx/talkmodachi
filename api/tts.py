@@ -68,8 +68,18 @@ def writeJobRaw(job,songData=None):
         emu.write_memory(getJobAddr()+structSize+1,songData)
 
 def calcFileLength(bytes):
+    sRate = 16000
+    if currentRom == "JP":
+        sRate = 0x58EF
     fLen = len(bytes)
-    return fLen / (16000*2)
+    return fLen / (sRate*2)
+
+def calcExpectedBytes(lenInSec):
+    sRate = 16000
+    if currentRom == "JP":
+        sRate = 0x58EF
+    b = 2*lenInSec*sRate
+    return b
 
 def waitForStatus(stat, timeout=15,setLanguage=None):
     current=-1
@@ -79,7 +89,7 @@ def waitForStatus(stat, timeout=15,setLanguage=None):
             job = readJob()
             job["language"] = setLanguage
             writeJobRaw(job)
-        time.sleep(0.1)
+        time.sleep(0.5)
         current = emu.read_memory(getJobAddr(),1)[0]
         if time.time() - start_time > timeout:
             raise TimeoutError(f"Timed out waiting for status {stat}")
@@ -216,18 +226,38 @@ def singText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0,la
     print("Length: "+str(calcFileLength(fullData))+"s")
     return convertDataToMp3(fullData)
 
-def generateText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0,language=1):
+def generateText(text,pitch=50,speed=50,quality=50,tone=50,accent=50,intonation=0,language=1,trim=-1):
     waitForStatus(1,setLanguage=language)
     sendText(text,pitch=pitch,speed=speed,quality=quality,tone=tone,accent=accent,intonation=intonation,language=language)
     
     waitForStatus(3,timeout=10)
 
-    data = readRenderedAudio()
+    tries = 3
+    data = None
+    while tries > 0:
+        try:
+            data = readRenderedAudio()
+            tries=0
+        except:
+            tries = tries - 1
+            
     if data is None:
         return None
 
     emu.write_memory(getJobAddr(),b"\x01") # set status to 1
 
-    print("Length: "+str(calcFileLength(data))+"s")
+    fileLen = calcFileLength(data)
+    print("Length: "+str(fileLen)+"s")
+
+    if trim != -1:
+        targetBytes = int(calcExpectedBytes(trim)) & ~1 # ensure even # of bytes
+        if targetBytes > len(data):
+            print("needs extend")
+            data = data + b"\x00" * (int(targetBytes) - len(data))
+        elif len(data) > targetBytes:
+            print("needs crop")
+            data = data[:targetBytes]
+        fileLen = calcFileLength(data)
+        print("Updated Length: "+str(fileLen)+"s")
     
     return convertDataToMp3(data)

@@ -71,6 +71,8 @@ const saveButton = document.getElementById('saveSongButton');
 const loadButton = document.getElementById('loadSongButton');
 const importButton = document.getElementById('importButton')
 saveGenSongButton.disabled = true;
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const bMult = 9.68; // must match what's in newSongConverter.py
 
 const apiUrl = '/tts';
 let mode='note'; // note= placing notes, event= placing events, bend=placing/editing bend points
@@ -83,9 +85,10 @@ function genId(){
     return Math.random().toString(36).substr(2, 9);
 }
 
-function generateSong(songData){
+async function generateSong(songData){
+    var audioCtx = new AudioContext();
     loadingCover.classList.remove('hidden');
-	fetch(apiUrl, {
+	return await fetch(apiUrl, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -98,14 +101,14 @@ function generateSong(songData){
             alert('Error generating song: ' + response.statusText);
 			throw new Error('API request failed');
 		}
-		return response.blob();
-	})
-    .then(audioBlob => {
+		return response.arrayBuffer();
+	}).then(buffer=>audioCtx.decodeAudioData(buffer))
+    /*.then(audioBlob => {
 		const audioUrl = URL.createObjectURL(audioBlob);
 		audioPlayer.src = audioUrl;
 		audioPlayer.play();
         saveGenSongButton.disabled = false;
-	})
+	})*/
 }
 
 function saveGeneratedSong(){
@@ -543,7 +546,6 @@ async function main(){
             notesHolder.removeChild(notec);
             setProgressThingyPos((-scrollX)/getMaxScroll());
         });
-
         return notec;
     }
 
@@ -733,7 +735,9 @@ async function main(){
             }
             cnotes.push({ note: noteName, pos, durBeats,text:noteText, bend:optimizedBend});
         });
-        return cnotes;
+        return cnotes.sort(function(a,b){
+            return a.pos-b.pos
+        });
     }
 
     function getAllEventsConverted() {
@@ -744,7 +748,9 @@ async function main(){
             eventData.pos = pos;
             cevents.push(eventData);
         });
-        return cevents;
+        return cevents.sort(function(a,b){
+            return a.pos-b.pos
+        });
     }
 
     function getAllNotesExcept(noteToExclude) {
@@ -977,6 +983,16 @@ async function main(){
         return songData;
     }
 
+    function getSongDataFromChunk(chunk){
+        const songData = {
+            bpm: getBpm(),
+            notes: chunk.data.notes,
+            events: chunk.data.events,
+            lang: langSelect.value
+        };
+        return songData;
+    }
+
     function getMaxNotePos(){
         const songData = getSongData();
         return Math.max(...songData.notes.map(x=>x.pos+x.durBeats))
@@ -986,9 +1002,45 @@ async function main(){
         return ((getMaxNotePos()*beatToPixel))-scrollBuff;
     }
 
-    playButton.addEventListener('click', () => {
-        const songData = getSongData();
-        generateSong(songData);
+    playButton.addEventListener('click', async () => {
+        //const songData = getSongData();
+        const audioCtx = new AudioContext();
+        const chunks = calcChunks();
+        console.log(chunks)
+
+        const buffers=[]
+        i=0;
+        for (chunk of chunks){
+            console.log("gen chunk "+i+"/"+chunks.length)
+            i++;
+            if (chunk.type === 'silence'){
+                const durationSec = chunk.length * (60 / getBpm());
+                const silentBuffer = audioCtx.createBuffer(1, Math.ceil(durationSec * audioCtx.sampleRate), audioCtx.sampleRate);
+                buffers.push(silentBuffer);
+            }else{
+                const chunkSong = getSongDataFromChunk(chunk)
+                const song = await generateSong(chunkSong);
+                buffers.push(song)
+            }
+        }
+
+        const totalLength = buffers.reduce((sum, buf) => sum + buf.length, 0);
+        const numChannels = Math.max(...buffers.map(b => b.numberOfChannels));
+        const combined = audioCtx.createBuffer(numChannels, totalLength, audioCtx.sampleRate);
+
+        let offset = 0;
+        for (const buf of buffers) {
+            for (let ch = 0; ch < buf.numberOfChannels; ch++) {
+                combined.getChannelData(ch).set(buf.getChannelData(ch), offset);
+            }
+            offset += buf.length;
+        }
+
+        audioPlayer.src = URL.createObjectURL(new Blob([audioBufferToWav(combined)]));
+        audioPlayer.play();
+        saveGenSongButton.disabled = false;
+
+        //console.log(buffers);
     });
 
     pianoTrackContainer.on('mouseup', pianoTrackPointerUp);
@@ -1124,7 +1176,9 @@ async function main(){
         input.click();
         input.onchange = async e => { 
             var file = e.target.files[0];
-            const txt = await file.text();
+            const txt = await file.arrayBuffer().then(buf => 
+                new TextDecoder('shift-jis').decode(buf)
+            );
             const j = USTParser.ustToJSON(txt);
             let nn=0;
             let cl = 0;
@@ -1147,17 +1201,103 @@ async function main(){
                         
                     }
                     if (length != -1 && note != -1){
-                        console.log(length)
                         if (lyric !== "R")
-                            addNote(note, cl * beatToPixel, length,lyric);
+                        {
+                            let finalLength = length;
+                            const blen = finalLength*bMult;
+                            if (blen > 99) // hard limit by the tts engine!
+                                finalLength = 98/bMult;
+                            addNote(note, cl * beatToPixel, finalLength,lyric);
+                        }
                         nn++;
                         cl+=length
                     }
+                }else if (part.section === "SETTING"){
+                    for (const entry of part.entries._){
+                        const parsed = parseEntry(entry)
+                        if (parsed.key === "Tempo"){
+                            setBpm(parseFloat(parsed.value))
+                        }
+                    }
                 }
-                if (nn>40)
-                    break;
             }
         }
     })
+
+    function calcChunks(){
+        let chunks=[]
+        let currentChunk = {
+            notes:[],
+            events:[],
+        }
+        const song = getSongData();
+        const notes = song.notes;
+        const events = song.events;
+        //console.log(song);
+        let beat = 0;
+        let lastNote=undefined;
+        let lastEosPos=-1;
+        let lastEventPos=-1;
+
+        function commitChunk(){
+            
+            beat=0;
+            if (currentChunk.notes.length == 0)
+            {
+                currentChunk={notes:[],events:[]}
+                return; // ???
+            }
+            const firstNotePos = currentChunk.notes[0].pos
+            for (const note of currentChunk.notes){
+                note.pos-=firstNotePos;
+            }
+
+            chunks.push({"type":"notes",data:currentChunk});
+            currentChunk={notes:[],events:[]}
+        }
+
+        function commitSilence(length){
+            chunks.push({"type":"silence",length:length})
+        }
+
+        for (const note of notes){
+            if (lastNote && (lastNote.pos+lastNote.durBeats) < note.pos){
+                const pauseLen = note.pos - (lastNote.pos+lastNote.durBeats)
+                commitChunk();
+                commitSilence(pauseLen);
+            }else if (!lastNote && note.pos > 0){
+                commitSilence(note.pos)
+            }
+            for (const event of events){
+                if (lastEventPos >= event.pos)
+                {
+                    console.log("skipped",event,lastEventPos)
+                    continue;
+                }
+                console.log(event)
+                lastEventPos=event.pos;
+                if (event.name=="eos" && note.pos >= event.pos && event.pos!=lastEosPos){
+                    lastEosPos = event.pos;
+                    commitChunk();
+                }else{
+                    currentChunk.events.push(event);
+                }
+            }
+            lastNote=note;
+            newbeat=beat+(note.durBeats*bMult)
+            if (newbeat > 99){ // hard limit by the tts engine!
+                commitChunk();
+                newbeat=beat+(note.durBeats*bMult);
+            }
+            //console.log(note,beat)
+            currentChunk.notes.push({...note,beat:beat});
+            beat=newbeat
+        }
+        if (currentChunk.notes.length > 0 || currentChunk.events.length > 0)
+        {
+            commitChunk();
+        }
+        return chunks;
+    }
 }
 main();
