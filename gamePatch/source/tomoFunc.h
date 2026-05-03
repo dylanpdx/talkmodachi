@@ -23,8 +23,8 @@
 #elif REGION_EU
 #define ADDR_unknown_ptr 0x00acd5a4 // TODO: verify this address
 #define ADDR_ttsGlobal 0x00acd54c
-//#define ADDR_newTtsGlobal 0x00107230 // new() for ttsGlobal
-//#define ADDR_setupTtsGlobal 0x00107180 // setup function for ttsGlobal
+#define ADDR_newTtsGlobal 0x00107230 // new() for ttsGlobal
+#define ADDR_setupTtsGlobal 0x00107180 // setup function for ttsGlobal
 #define ADDR_setupFunc 0x00391788
 #define ADDR_doTTS 0x00191ef0
 #define ADDR_msbtToText 0x003d3c9c

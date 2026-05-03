@@ -359,7 +359,11 @@ dialog:is([open]) {
 	position: absolute;
 	width: 30em;
 	z-index: 4;
-	transform: translate(0, 50%);
+	top:50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 10;
+	margin: 0;
 }
 
 .voiceslist {
@@ -622,12 +626,25 @@ footer #lensdeer {
 		width: calc(90% - 40px);
 		max-width: unset;
 	}
+
+	dialog:is([open]){
+		position: fixed;
+		width: 85%;
+	}
+
+	.twocol .control{
+		grid-column: 1/3;
+	}
 }
 
 @media screen and (max-width: 480px) {
 	:where(#input, #output:not[hidden]) #controlsContainer:not([hidden]) {
 		display: flex;
 		flex-direction: column;
+	}
+
+	dialog:is([open]){
+		width: 100%;
 	}
 }
 
