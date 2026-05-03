@@ -1,5 +1,5 @@
 const notes = [
-    {"name":"C#6","b":true},
+    {"name":"C#6","b":true}, // 85
     {"name":"C6","b":false},
     {"name":"B5","b":false},
     {"name":"A#5","b":true},
@@ -53,8 +53,10 @@ const notes = [
     {"name":"A#1","b":true},
     {"name":"A1","b":false},
     {"name":"G#1","b":true},
-    {"name":"G1","b":false},
+    {"name":"G1","b":false}, // 31
 ]
+const minMidiNote=31;
+const maxMidiNote=85;
 const gridSelect = document.getElementById('gridSelect');
 const langSelect = document.getElementById('langSelect');
 const bpmInput = document.getElementById('bpmInput');
@@ -103,12 +105,6 @@ async function generateSong(songData){
 		}
 		return response.arrayBuffer();
 	}).then(buffer=>audioCtx.decodeAudioData(buffer))
-    /*.then(audioBlob => {
-		const audioUrl = URL.createObjectURL(audioBlob);
-		audioPlayer.src = audioUrl;
-		audioPlayer.play();
-        saveGenSongButton.disabled = false;
-	})*/
 }
 
 function saveGeneratedSong(){
@@ -1173,56 +1169,75 @@ async function main(){
     importButton.addEventListener('click',()=>{
         var input = document.createElement('input');
         input.type = 'file';
+        input.accept = ".ust,.mid"
         input.click();
         input.onchange = async e => { 
             var file = e.target.files[0];
-            const txt = await file.arrayBuffer().then(buf => 
-                new TextDecoder('shift-jis').decode(buf)
-            );
-            const j = USTParser.ustToJSON(txt);
-            let nn=0;
-            let cl = 0;
-            for (part of j){
-                if (typeof part.section === "number" && "entries" in part){
-                    // probably a note
-                    length=-1;
-                    note=-1;
-                    lyric=undefined
-                    for (entry of part.entries._){
-                        const parsed = parseEntry(entry)
-                        if (parsed.key === "NoteNum"){
-                            const v = 85-parseInt(parsed.value);
-                            note=v;
-                        }else if (parsed.key === "Length"){
-                            length = parseInt(parsed.value)/480;
-                        }else if (parsed.key === "Lyric"){
-                            lyric = parsed.value;
+            if (file.name.endsWith(".ust")){
+                await handleUstImport(file);
+            }else if (file.name.endsWith(".mid")){
+                await handleMidiImport(file);
+            }
+        }
+    })
+
+    async function handleUstImport(file){
+        const txt = await file.arrayBuffer().then(buf => 
+            new TextDecoder('shift-jis').decode(buf)
+        );
+        const j = USTParser.ustToJSON(txt);
+        let nn=0;
+        let cl = 0;
+        for (part of j){
+            if (typeof part.section === "number" && "entries" in part){
+                // probably a note
+                length=-1;
+                note=-1;
+                lyric=undefined
+                for (entry of part.entries._){
+                    const parsed = parseEntry(entry)
+                    if (parsed.key === "NoteNum"){
+                        let parsedNote = parseInt(parsed.value);
+                        if (parsedNote > maxMidiNote){
+                            parsedNote=maxMidiNote;
                         }
-                        
+                        const v = maxMidiNote - parsedNote;
+                        note=v;
+                    }else if (parsed.key === "Length"){
+                        length = parseInt(parsed.value)/480;
+                    }else if (parsed.key === "Lyric"){
+                        lyric = parsed.value;
                     }
-                    if (length != -1 && note != -1){
-                        if (lyric !== "R")
-                        {
-                            let finalLength = length;
-                            const blen = finalLength*bMult;
-                            if (blen > 99) // hard limit by the tts engine!
-                                finalLength = 98/bMult;
-                            addNote(note, cl * beatToPixel, finalLength,lyric);
-                        }
-                        nn++;
-                        cl+=length
+                    
+                }
+                if (length != -1 && note != -1){
+                    if (lyric !== "R")
+                    {
+                        let finalLength = length;
+                        const blen = finalLength*bMult;
+                        if (blen > 99) // hard limit by the tts engine!
+                            finalLength = 98/bMult;
+                        addNote(note, cl * beatToPixel, finalLength,lyric);
                     }
-                }else if (part.section === "SETTING"){
-                    for (const entry of part.entries._){
-                        const parsed = parseEntry(entry)
-                        if (parsed.key === "Tempo"){
-                            setBpm(parseFloat(parsed.value))
-                        }
+                    nn++;
+                    cl+=length
+                }
+            }else if (part.section === "SETTING"){
+                for (const entry of part.entries._){
+                    const parsed = parseEntry(entry)
+                    if (parsed.key === "Tempo"){
+                        setBpm(parseFloat(parsed.value))
                     }
                 }
             }
         }
-    })
+    }
+
+    async function handleMidiImport(file){
+        const ab = await file.arrayBuffer();
+        const res = MidiParser.parse(new Uint8Array(ab));
+        
+    }
 
     function calcChunks(){
         let chunks=[]
