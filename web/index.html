@@ -12,6 +12,33 @@
         <h1>Talkmodachi (WIP)</h1>
     </header>
 
+    <dialog id="manageVoicesDialog">
+        <h2 class="pill">Manage Voices</h2>
+        <div class="voiceslist" id="manageVoicesList">
+            <!-- Will be populated -->
+        </div>
+        <input type="file" id="savefileload" style="display:none">
+        <div class="buttonContainer">
+            <button onclick="loadSave()">Load from Save</button>
+            <button class="yellow" id="manageVoicesBtn" onclick="toggleManageVoices();">Close</button>
+        </div>
+
+    </dialog>
+
+    <dialog id="otherSitesDialog">
+        <h2 class="pill">Other Sites</h2>
+        <div class="otherSitesList">
+            <p>Here are some similar projects:</p>
+            <ul>
+                <li><a href="https://mii.nxw.pw" target="_blank" rel="noopener noreferrer">Mii Creator (Online Mii Maker)</a></li>
+                <li><a href="https://mii-unsecure.ariankordi.net" target="_blank" rel="noopener noreferrer">Mii Renderer</a></li>
+            </ul>
+        </div>
+        <div class="buttonContainer">
+            <button class="yellow" onclick="toggleOtherSites();">Close</button>
+        </div>
+    </dialog>
+    
     <main class="tts">
         <section id="input">
             <h2 class="pill">Text Input</h2>
@@ -123,34 +150,10 @@
                 <a id="downloadButton" class='yellow button'>Download</a>
             </div>
         </section>
-        <dialog id="manageVoicesDialog">
-            <h2 class="pill">Manage Voices</h2>
-            <div class="voiceslist" id="manageVoicesList">
-                <!-- Will be populated -->
-            </div>
-            <input type="file" id="savefileload" style="display:none">
-            <div class="buttonContainer">
-                <button onclick="loadSave()">Load from Save</button>
-                <button class="yellow" id="manageVoicesBtn" onclick="toggleManageVoices();">Close</button>
-            </div>
 
-        </dialog>
 
-        <dialog id="otherSitesDialog">
-            <h2 class="pill">Other Sites</h2>
-            <div class="otherSitesList">
-                <p>Here are some similar projects:</p>
-                <ul>
-                    <li><a href="https://mii.nxw.pw" target="_blank" rel="noopener noreferrer">Mii Creator (Online Mii Maker)</a></li>
-                    <li><a href="https://mii-unsecure.ariankordi.net" target="_blank" rel="noopener noreferrer">Mii Renderer</a></li>
-                </ul>
-            </div>
-            <div class="buttonContainer">
-                <button class="yellow" onclick="toggleOtherSites();">Close</button>
-            </div>
-        </dialog>
+        
     </main>
-    
     <footer>
         <div class="footer-left">
             <a class="button" href="https://github.com/dylanpdx/talkmodachi">Source</a>
