@@ -73,3 +73,20 @@ div[id^="event-"] .pill{
     line-height: 1;
     position: relative;
 }
+
+dialog:is([open]) {
+    top:50%;
+    left: 50%;
+	width: 30em;
+	z-index: 4;
+	transform: translate(-50%,-50%);
+}
+
+.importsettings{
+    display: flex;
+    flex-direction: column;
+}
+
+.importsettings code{
+    background-color: #C0C0FF;
+}

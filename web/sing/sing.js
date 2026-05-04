@@ -71,13 +71,15 @@ const loadingCover = document.getElementById('loadingCover');
 const saveGenSongButton = document.getElementById('saveGenSongButton');
 const saveButton = document.getElementById('saveSongButton');
 const loadButton = document.getElementById('loadSongButton');
-const importButton = document.getElementById('importButton')
+const importButton = document.getElementById('importButton');
+const importDialog = document.getElementById('importDialog')
 saveGenSongButton.disabled = true;
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const bMult = 9.68; // must match what's in newSongConverter.py
 
 const apiUrl = '/tts';
 let mode='note'; // note= placing notes, event= placing events, bend=placing/editing bend points
+let selectedFile=undefined;
 
 canvElement.oncontextmenu = (e) => {
     return false; // prevent context menu on canvas
@@ -257,7 +259,6 @@ async function main(){
         progressBarThingy.position.x = Math.min(app.canvas.width-progressBarBg.position.x-thingySize,app.canvas.width*pct);
     }
     function updateProgressThingy(){
-        console.log("upt");
         setProgressThingyPos(thingyPos);
     }
     window.addEventListener('resize',()=>{
@@ -1173,13 +1174,19 @@ async function main(){
         input.click();
         input.onchange = async e => { 
             var file = e.target.files[0];
-            if (file.name.endsWith(".ust")){
+            selectedFile = file;
+            showImportDialog();
+            /*if (file.name.endsWith(".ust")){
                 await handleUstImport(file);
             }else if (file.name.endsWith(".mid")){
                 await handleMidiImport(file);
-            }
+            }*/
         }
     })
+
+    function showImportDialog(){
+        importDialog.setAttribute('open', 'true');
+    }
 
     async function handleUstImport(file){
         const txt = await file.arrayBuffer().then(buf => 
@@ -1236,7 +1243,8 @@ async function main(){
     async function handleMidiImport(file){
         const ab = await file.arrayBuffer();
         const res = MidiParser.parse(new Uint8Array(ab));
-        
+        console.log(res)
+        // TODO: Don't forget checking the note is valid! (between min/max midi notes)
     }
 
     function calcChunks(){

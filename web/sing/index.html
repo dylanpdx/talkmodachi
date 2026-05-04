@@ -72,16 +72,54 @@
             <button onclick="document.getElementById('disclaimerCover').style.display='none'">I Understand</button>
         </div>
     </div>
+    <dialog class="importer" id="importDialog">
+        <h2 class="pill">Import Settings</h2>
+        <h3>PLEASE NOTE: Imports <i>WILL</i> need manual clean-up to make them sound good. I offer some quick fixes here but it's not a full solution.</h3>
+        <div class="importsettings">
+            <h4 class="pill">Conversion</h4>
+            <div>
+                <input type="checkbox" id="toromaji">
+                <label for="toromaji">Convert Japanese to Romaji (<code>かん</code> → <code>kan</code>)</label>
+            </div>
+            <div>
+                <input type="checkbox" id="plustobend">
+                <label for="plustobend">Convert plus symbols (<code>+</code>) to SAMPA separated notes</label>
+            </div>
+            <div>
+                <input type="checkbox" id="dashtobend">
+                <label for="dashtobend">Convert dash symbols (<code>-</code>) to bends</label>
+            </div>
+            <h4 class="pill">Formatting</h4>
+            <div>
+                <input checked type="radio" id="nochange" name="proctype" value="nochange">
+                <label for="nochange">No Change</label>
+            </div>
+            <div>
+                <input type="radio" id="remspaces" name="proctype" value="remspaces">
+                <label for="remspaces">Remove Spaces (<code>i か</code> → <code>iか</code>)</label>
+            </div>
+            <div>
+                <input type="radio" id="keepfirst" name="proctype" value="keepfirst">
+                <label for="keepfirst">Keep only first item if separated by spaces (<code>i か</code> → <code>i</code>)</label>
+            </div>
+            <div>
+                <input type="radio" id="keeplast" name="proctype" value="keeplast">
+                <label for="keeplast">Keep only last item if separated by spaces (<code>i か</code> → <code>か</code>)</label>
+            </div>
+        </div>
+    </dialog>
     <div id="canv"></div>
-    <script src="audiobuffer-to-wav.js"></script>
-    <script src="midi-parser-js-4.0.4/main.js"></script>
-    <script src="ust2json/utils.js?v=20260216"></script>
-    <script src="events.js?v=20260426"></script>
-    <script src="sing.js?v=20260427"></script>
     <script>
         if (window.location.hostname == "localhost" || window.location.hostname == "127.0.0.1"){
             document.getElementById('disclaimerCover').style.display='none';
         }
     </script>
+    <script src="https://unpkg.com/rita@3.2.16/dist/rita.min.js"></script>
+    <script src="audiobuffer-to-wav.js"></script>
+    <script src="midi-parser-js-4.0.4/main.js"></script>
+    <script src="ust2json/utils.js?v=20260216"></script>
+    <script src="events.js?v=20260426"></script>
+    <script src="sing.js?v=20260427"></script>
+    
 </body>
 </html>
