@@ -1226,7 +1226,7 @@ async function main(){
                     
                 }
                 if (length != -1 && note != -1){
-                    if (lyric !== "R")
+                    if (lyric !== "R" && lyric !== "r")
                     {
                         let finalLength = length;
                         const blen = finalLength*bMult;
@@ -1359,6 +1359,7 @@ async function main(){
         let lastEosPos=-1;
         let lastEventPos=-1;
         let lastEventsOfType={}
+        let eventIdx = 0;
 
         function commitChunk(){
             
@@ -1371,6 +1372,13 @@ async function main(){
             const firstNotePos = currentChunk.notes[0].pos
             for (const note of currentChunk.notes){
                 note.pos-=firstNotePos;
+            }
+            for (const event of currentChunk.events){
+                event.pos-=firstNotePos;
+            }
+            for (eot of Object.values(lastEventsOfType)){
+                if (!currentChunk.events.some(e=>e.name==eot.name && e.pos==0))
+                    currentChunk.events.push(eot)
             }
 
             chunks.push({"type":"notes",data:currentChunk});
@@ -1389,17 +1397,16 @@ async function main(){
             }else if (!lastNote && note.pos > 0){
                 commitSilence(note.pos)
             }
-            for (const event of events){
-                if (lastEventPos >= event.pos)
-                    continue;
-                console.log(event)
-                lastEventPos=event.pos;
-                if (event.name=="eos" && note.pos >= event.pos && event.pos!=lastEosPos){
+
+            while (eventIdx < events.length && events[eventIdx].pos <= note.pos) {
+                const event = events[eventIdx++];
+                if (event.name === "eos" && event.pos !== lastEosPos) {
                     lastEosPos = event.pos;
                     commitChunk();
-                }else{
+                } else {
                     currentChunk.events.push(event);
-                    lastEventsOfType[event.name]=event;
+                    lastEventsOfType[event.name] = JSON.parse(JSON.stringify(event)); // clone
+                    lastEventsOfType[event.name].pos = 0;
                 }
             }
             lastNote=note;
