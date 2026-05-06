@@ -488,6 +488,16 @@ async function main(){
                 this.rerenderBend();
         }
         notec.fillinBend();
+
+        notec.changeSize = function(width){
+            notec.children.forEach(child => {
+                if (child instanceof PIXI.Graphics) {
+                    child.width = width;
+                }
+            });
+            notec._nWidth = width; // update stored width
+            notec.fillinBend();
+        }
         
 
         notec.x = pos;
@@ -555,6 +565,8 @@ async function main(){
     function addEvent(eventData, pos) {
         if (eventData.name === 'none')
             return; // Skip if none event is selected
+        if (getAllEvents().some((e=>e.x==pos && e._eventData.name==eventData.name)))
+            return; // cannot overwrite notes
         const eventDefinition = events[eventData.name];
         const extraDn=30 + (-7*eventDefinition.i); // extra distance from the bottom of the screen
         const eventLine = new PIXI.Graphics();
@@ -905,13 +917,7 @@ async function main(){
                 return;
             }
 
-            resizingNote.children.forEach(child => {
-                if (child instanceof PIXI.Graphics) {
-                    child.width = width;
-                }
-            });
-            resizingNote._nWidth = width; // update stored width
-            resizingNote.fillinBend();
+            resizingNote.changeSize(width)
         }else if (editingBendPoint) {
             const bendLocalX = localPos.x - editingBendPoint.note.x;
             const bendLocalY = localPos.y - editingBendPoint.note.y;
@@ -1051,6 +1057,8 @@ async function main(){
             // snap newPos to grid
             const gridSize = getGridSize();
             const snappedPos = Math.round(newPos / (gridSize * beatToPixel)) * (gridSize * beatToPixel);
+            if (getAllEvents().some((e=>e.x==snappedPos && e._eventData.name==editingEvent._eventData.name)))
+                return; // cannot overwrite notes
             editingEvent.x = snappedPos;
             rerenderAllNotes();
             app.render();
@@ -1175,12 +1183,12 @@ async function main(){
         input.onchange = async e => { 
             var file = e.target.files[0];
             selectedFile = file;
-            showImportDialog();
-            /*if (file.name.endsWith(".ust")){
+            //showImportDialog();
+            if (file.name.endsWith(".ust")){
                 await handleUstImport(file);
             }else if (file.name.endsWith(".mid")){
                 await handleMidiImport(file);
-            }*/
+            }
         }
     })
 
@@ -1247,6 +1255,95 @@ async function main(){
         // TODO: Don't forget checking the note is valid! (between min/max midi notes)
     }
 
+
+    async function fixPlusSymbols(){
+        const sortedNotes=getAllNotes().sort((a,b)=> a.x-b.x);
+        let lastWordNote=undefined;
+        let accumSymb=[]
+        let failedConversions = 0;
+
+        function testChain(){
+            if (lastWordNote != undefined && accumSymb.length > 0){
+                const wordToJoin = getNoteText(lastWordNote);
+                const sampa = toFlatSampa(wordToJoin)
+                if (sampa.length != (accumSymb.length+1)){
+                    failedConversions++;
+                }else{
+                    const lastNote=accumSymb[accumSymb.length-1];
+                    for (let i = 0;i<sampa.length;i++){
+                        if (i==0)
+                            setNoteText(lastWordNote,sampa[i])
+                        else
+                            setNoteText(accumSymb[i-1],sampa[i])
+                    }
+                    const possibleOffEvent = getAllEvents().filter(e=>e.x==lastWordNote.x)[0];
+                    if (possibleOffEvent){
+                        // assume there's already a "phonetic ON event, and delete this OFF event"
+                        eventsHolder.removeChild(possibleOffEvent)
+                    }else{
+                        addEvent({"name":"phonetic","vars":{"state":1}},lastWordNote.x)
+                    }
+                    
+                    addEvent({"name":"phonetic","vars":{"state":0}},lastNote.x+lastNote._nWidth)
+                }
+                accumSymb = []
+            }
+        }
+
+        for (note of sortedNotes){
+            const text = getNoteText(note);
+            if (text!="+"){
+                testChain();
+
+                lastWordNote=note;
+            }else if (lastWordNote != undefined){
+                accumSymb.push(note);
+            }
+        }
+        testChain();
+    }
+
+    async function fixMinusSymbols(){
+        const sortedNotes=getAllNotes().sort((a,b)=> a.x-b.x);
+        let lastWordNote=undefined;
+        let accumSymb=[]
+
+        function testChain(){
+            if (lastWordNote != undefined && accumSymb.length > 0){
+                const firstNote = Math.floor(lastWordNote.y / noteHeight);
+                const bendPoses = accumSymb.map(n=>[n.x-lastWordNote.x,firstNote-Math.floor(n.y / noteHeight)])
+                const width = accumSymb[accumSymb.length-1]._nWidth;
+                const lastPos = accumSymb[accumSymb.length-1].x + width
+                for (symb of accumSymb)
+                    notesHolder.removeChild(symb);
+                lastWordNote.changeSize(lastPos - lastWordNote.x)
+                const lastBendNote = bendPoses[bendPoses.length-1][1]
+                lastWordNote._bend=[
+                    {pos:0,val:0,e:false,id:genId()},
+                    ...bendPoses.map(p=>({pos:p[0],val:p[1],e:false,id:genId()})),
+                    {pos:width,val:lastBendNote,e:false,id:genId()}
+                ]
+                lastWordNote.fillinBend();
+                lastWordNote.rerenderBend();
+                
+                accumSymb = []
+            }
+        }
+
+        for (note of sortedNotes){
+            const text = getNoteText(note);
+            if (text!="-"){
+                testChain();
+
+                lastWordNote=note;
+            }else if (lastWordNote != undefined){
+                accumSymb.push(note);
+            }
+        }
+        testChain();
+    }
+    window.test=[fixPlusSymbols,fixMinusSymbols]
+
     function calcChunks(){
         let chunks=[]
         let currentChunk = {
@@ -1261,6 +1358,7 @@ async function main(){
         let lastNote=undefined;
         let lastEosPos=-1;
         let lastEventPos=-1;
+        let lastEventsOfType={}
 
         function commitChunk(){
             
@@ -1293,10 +1391,7 @@ async function main(){
             }
             for (const event of events){
                 if (lastEventPos >= event.pos)
-                {
-                    console.log("skipped",event,lastEventPos)
                     continue;
-                }
                 console.log(event)
                 lastEventPos=event.pos;
                 if (event.name=="eos" && note.pos >= event.pos && event.pos!=lastEosPos){
@@ -1304,6 +1399,7 @@ async function main(){
                     commitChunk();
                 }else{
                     currentChunk.events.push(event);
+                    lastEventsOfType[event.name]=event;
                 }
             }
             lastNote=note;
