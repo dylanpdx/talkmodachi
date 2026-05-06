@@ -76,6 +76,7 @@ const importDialog = document.getElementById('importDialog')
 saveGenSongButton.disabled = true;
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const bMult = 9.68; // must match what's in newSongConverter.py
+const chunkCache={}
 
 const apiUrl = '/tts';
 let mode='note'; // note= placing notes, event= placing events, bend=placing/editing bend points
@@ -89,8 +90,31 @@ function genId(){
     return Math.random().toString(36).substr(2, 9);
 }
 
+function saveCache(){
+    // for testing only
+    /*const sCache={}
+    for (key of Object.keys(chunkCache))
+        sCache[key]=new Uint8Array(chunkCache[key])
+    sessionStorage.setItem("cache",JSON.stringify(sCache))*/
+}
+
+function loadCache(){
+    // for testing only
+    /*const cache = JSON.parse(sessionStorage.getItem("cache"))
+    if (!cache)
+        return;
+    for (key of Object.keys(cache)){
+        const arr = []
+        for (n of Object.values(cache[key])){
+            arr.push(n)
+        }
+        chunkCache[key]=new Uint8Array(arr).buffer
+    }*/
+}
+
+loadCache();
+
 async function generateSong(songData){
-    var audioCtx = new AudioContext();
     loadingCover.classList.remove('hidden');
 	return await fetch(apiUrl, {
 		method: 'POST',
@@ -106,7 +130,7 @@ async function generateSong(songData){
 			throw new Error('API request failed');
 		}
 		return response.arrayBuffer();
-	}).then(buffer=>audioCtx.decodeAudioData(buffer))
+	})
 }
 
 function saveGeneratedSong(){
@@ -784,7 +808,12 @@ async function main(){
 
     // ability to place notes using mouse
     function pianoTrackPointerDown(event) {
+        
         const localPos = event.data.getLocalPosition(pianoTrackContainer);
+        if (!audioPlayer.paused){
+            audioPlayer.currentTime=(localPos.x / beatToPixel) * (60 / getBpm());
+            return;
+        }
         let newPos = localPos.x;
         // snap newpos to grid
         const gridSize = getGridSize();
@@ -1006,11 +1035,26 @@ async function main(){
     }
 
     playButton.addEventListener('click', async () => {
+        if (!audioPlayer.paused){
+            audioPlayer.pause();
+            return;
+        }
         //const songData = getSongData();
         const audioCtx = new AudioContext();
         const chunks = calcChunks();
-        console.log(chunks)
-
+        for (let i = 0;i<chunks.length;i++){
+            if (chunks[i].type != "notes")
+                continue;
+            const chunkHashBuf= await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(chunks[i])))
+            const chunkHash=Array.from(new Uint8Array(chunkHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+            chunks[i].hash=chunkHash; // it should be safe to do this since we're not re-hashing this.. hopefully...
+        }
+        const hashes = chunks.filter(c=>c.type=="notes").map(c=>c.hash)
+        for (const key of Object.keys(chunkCache)){
+            if (!hashes.includes(key)){
+                delete chunkCache[key]
+            }
+        }
         const buffers=[]
         i=0;
         for (chunk of chunks){
@@ -1021,9 +1065,18 @@ async function main(){
                 const silentBuffer = audioCtx.createBuffer(1, Math.ceil(durationSec * audioCtx.sampleRate), audioCtx.sampleRate);
                 buffers.push(silentBuffer);
             }else{
-                const chunkSong = getSongDataFromChunk(chunk)
-                const song = await generateSong(chunkSong);
-                buffers.push(song)
+                let song = undefined;
+
+                if (chunkCache[chunk.hash]){
+                    song = chunkCache[chunk.hash]
+                }else{
+                    const chunkSong = getSongDataFromChunk(chunk)
+                    song = await generateSong(chunkSong);
+                    chunkCache[chunk.hash]=song;
+                    saveCache();
+                }
+                const songAudio = await audioCtx.decodeAudioData(song.slice(0))
+                buffers.push(songAudio)
             }
         }
 
