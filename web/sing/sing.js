@@ -1485,7 +1485,7 @@ async function main(){
                 commitSilence(note.pos)
             }
 
-            while (eventIdx < events.length && events[eventIdx].pos <= note.pos) {
+            while (eventIdx < events.length && events[eventIdx].pos <= (note.pos+note.durBeats)) {
                 const event = events[eventIdx++];
                 if (event.name === "eos" && event.pos !== lastEosPos) {
                     lastEosPos = event.pos;
