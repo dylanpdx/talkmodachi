@@ -157,6 +157,10 @@ def convertSongToTTS(data):
                     elif not isOn and phonetic:
                         ttsSong += ttsCommands.formatCommand("toi","orth")
                         phonetic = False
+                elif event['name'] == 'voice':
+                    vpitch = int(vars.get('vpitch', 49))
+                    vquality = int(vars.get('vquality', 50))
+                    ttsSong += ttsCommands.command_setVoicePitch((195*vpitch) + 500) + ttsCommands.command_setVoiceQuality((83.09*vquality) + 6674)
             currentSecondaryEvent = currentEvent
     if phonetic: # needs to be reset!
         ttsSong += ttsCommands.formatCommand("toi","orth")

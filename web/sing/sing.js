@@ -68,6 +68,7 @@ const notesModeButton = document.getElementById('toggleNoteModeButton');
 const eventsModeButton = document.getElementById('toggleEventModeButton');
 const bendModeButton = document.getElementById('toggleBendModeButton');
 const loadingCover = document.getElementById('loadingCover');
+const loadingText = document.getElementById('loadingText')
 const saveGenSongButton = document.getElementById('saveGenSongButton');
 const saveButton = document.getElementById('saveSongButton');
 const loadButton = document.getElementById('loadSongButton');
@@ -126,7 +127,6 @@ function loadCache(){
 loadCache();
 
 async function generateSong(songData){
-    loadingCover.classList.remove('hidden');
 	return await fetch(apiUrl, {
 		method: 'POST',
 		headers: {
@@ -135,7 +135,6 @@ async function generateSong(songData){
 		body: JSON.stringify(songData)
 	})
 	.then(response => {
-        loadingCover.classList.add('hidden');
 		if (!response.ok) {
             alert('Error generating song: ' + response.statusText);
 			throw new Error('API request failed');
@@ -1068,27 +1067,33 @@ async function main(){
         }
         const buffers=[]
         i=0;
-        for (chunk of chunks){
-            console.log("gen chunk "+i+"/"+chunks.length)
-            i++;
-            if (chunk.type === 'silence'){
-                const durationSec = chunk.length * (60 / getBpm());
-                const silentBuffer = audioCtx.createBuffer(1, Math.ceil(durationSec * audioCtx.sampleRate), audioCtx.sampleRate);
-                buffers.push(silentBuffer);
-            }else{
-                let song = undefined;
-
-                if (chunkCache[chunk.hash]){
-                    song = chunkCache[chunk.hash]
+        try{
+            loadingCover.classList.remove('hidden');
+            for (chunk of chunks){
+                loadingText.innerHTML = "Rendering... "+Math.floor((i/chunks.length)*100)+"%"
+                console.log("gen chunk "+i+"/"+chunks.length)
+                i++;
+                if (chunk.type === 'silence'){
+                    const durationSec = chunk.length * (60 / getBpm());
+                    const silentBuffer = audioCtx.createBuffer(1, Math.ceil(durationSec * audioCtx.sampleRate), audioCtx.sampleRate);
+                    buffers.push(silentBuffer);
                 }else{
-                    const chunkSong = getSongDataFromChunk(chunk)
-                    song = await generateSong(chunkSong);
-                    chunkCache[chunk.hash]=song;
-                    saveCache();
+                    let song = undefined;
+
+                    if (chunkCache[chunk.hash]){
+                        song = chunkCache[chunk.hash]
+                    }else{
+                        const chunkSong = getSongDataFromChunk(chunk)
+                        song = await generateSong(chunkSong);
+                        chunkCache[chunk.hash]=song;
+                        saveCache();
+                    }
+                    const songAudio = await audioCtx.decodeAudioData(song.slice(0))
+                    buffers.push(songAudio)
                 }
-                const songAudio = await audioCtx.decodeAudioData(song.slice(0))
-                buffers.push(songAudio)
             }
+        }finally{
+            loadingCover.classList.add('hidden');
         }
 
         const totalLength = buffers.reduce((sum, buf) => sum + buf.length, 0);
@@ -1454,7 +1459,8 @@ async function main(){
             if (noteChunks.length > 0){
                 const lastNoteChunk=noteChunks[noteChunks.length-1];
                 for (ev of lastNoteChunk.data.events)
-                    lastEventsOfType[ev.name] = JSON.parse(JSON.stringify(ev))
+                    if (ev.name !== "eos")
+                        lastEventsOfType[ev.name] = JSON.parse(JSON.stringify(ev))
             }
 
             beat=0;
