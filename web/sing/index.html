@@ -83,12 +83,13 @@
             </div>
             <div>
                 <input type="checkbox" id="plustobend">
-                <label for="plustobend">Convert plus symbols (<code>+</code>) to SAMPA separated notes</label>
+                <label for="plustobend">Convert plus symbols (<code>+</code>) to SAMPA separated notes (ENG only)</label>
             </div>
             <div>
                 <input type="checkbox" id="dashtobend">
                 <label for="dashtobend">Convert dash symbols (<code>-</code>) to bends</label>
             </div>
+            <br/>
             <h4 class="pill">Formatting</h4>
             <div>
                 <input checked type="radio" id="nochange" name="proctype" value="nochange">
@@ -106,7 +107,10 @@
                 <input type="radio" id="keeplast" name="proctype" value="keeplast">
                 <label for="keeplast">Keep only last item if separated by spaces (<code>i か</code> → <code>か</code>)</label>
             </div>
+            <button id="completeImportbutton">Import</button>
+            <button id="cancelImportbutton">Cancel</button>
         </div>
+        
     </dialog>
     <div id="canv"></div>
     <script>
@@ -114,6 +118,7 @@
             document.getElementById('disclaimerCover').style.display='none';
         }
     </script>
+    <script src="https://unpkg.com/wanakana@5.3.1/wanakana.min.js"></script>
     <script src="convert.js?v=20260504"></script>
     <script src="https://unpkg.com/rita@3.2.16/dist/rita.min.js"></script>
     <script src="audiobuffer-to-wav.js"></script>

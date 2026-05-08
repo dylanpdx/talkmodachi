@@ -72,7 +72,18 @@ const saveGenSongButton = document.getElementById('saveGenSongButton');
 const saveButton = document.getElementById('saveSongButton');
 const loadButton = document.getElementById('loadSongButton');
 const importButton = document.getElementById('importButton');
-const importDialog = document.getElementById('importDialog')
+const importDialog = document.getElementById('importDialog');
+const completeImportbutton = document.getElementById('completeImportbutton');
+const cancelImportbutton = document.getElementById('cancelImportbutton');
+
+const toromaji = document.getElementById('toromaji');
+const plustobend = document.getElementById('plustobend');
+const dashtobend = document.getElementById('dashtobend');
+const rb_nochange = document.getElementById('nochange');
+const rb_remspaces = document.getElementById('remspaces');
+const rb_keepfirst = document.getElementById('keepfirst');
+const rb_keeplast = document.getElementById('keeplast');
+
 saveGenSongButton.disabled = true;
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const bMult = 9.68; // must match what's in newSongConverter.py
@@ -1236,14 +1247,28 @@ async function main(){
         input.onchange = async e => { 
             var file = e.target.files[0];
             selectedFile = file;
-            //showImportDialog();
-            if (file.name.endsWith(".ust")){
-                await handleUstImport(file);
-            }else if (file.name.endsWith(".mid")){
-                await handleMidiImport(file);
-            }
+            showImportDialog();
+
         }
     })
+
+    completeImportbutton.addEventListener('click',async ()=>{
+        importDialog.removeAttribute('open');
+        // todo: show "importing..."
+        if (selectedFile.name.endsWith(".ust")){
+
+            await handleUstImport(selectedFile);
+        }else if (selectedFile.name.endsWith(".mid")){
+            await handleMidiImport(selectedFile);
+        }
+        selectedFile = undefined;
+        
+    });
+
+    cancelImportbutton.addEventListener('click',()=>{
+        selectedFile = undefined;
+        importDialog.removeAttribute('open');
+    });
 
     function showImportDialog(){
         importDialog.setAttribute('open', 'true');
@@ -1285,6 +1310,15 @@ async function main(){
                         const blen = finalLength*bMult;
                         if (blen > 99) // hard limit by the tts engine!
                             finalLength = 98/bMult;
+                        if (toromaji.checked)
+                            lyric = wanakana.toRomaji(lyric)
+                        
+                        if (rb_remspaces.checked)
+                            lyric = lyric.replaceAll(" ","")
+                        else if (rb_keepfirst.checked)
+                            lyric = lyric.split(" ")[0]
+                        else if (rb_keeplast.checked)
+                            lyric = lyric.split(" ").slice(-1)
                         addNote(note, cl * beatToPixel, finalLength,lyric);
                     }
                     nn++;
