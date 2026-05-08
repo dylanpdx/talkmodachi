@@ -1464,8 +1464,8 @@ async function main(){
                 event.pos-=firstNotePos;
             }
             for (eot of Object.values(lastEventsOfType)){
-                if (!currentChunk.events.some(e=>e.name==eot.name && e.pos==0))
-                    currentChunk.events.push(eot)
+                if (!currentChunk.events.some(e=>e.name==eot.name && approxEqual(e.pos,0)))
+                    currentChunk.events.push({...eot,pos:0})
             }
 
             chunks.push({"type":"notes",data:currentChunk});
@@ -1492,8 +1492,7 @@ async function main(){
                     commitChunk();
                 } else {
                     currentChunk.events.push(event);
-                    lastEventsOfType[event.name] = JSON.parse(JSON.stringify(event)); // clone
-                    lastEventsOfType[event.name].pos = 0;
+                    lastEventsOfType[event.name] = JSON.parse(JSON.stringify(event))
                 }
             }
             lastNote=note;
