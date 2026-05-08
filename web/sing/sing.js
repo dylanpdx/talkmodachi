@@ -1445,11 +1445,18 @@ async function main(){
         let lastNote=undefined;
         let lastEosPos=-1;
         let lastEventPos=-1;
-        let lastEventsOfType={}
+        
         let eventIdx = 0;
 
         function commitChunk(){
-            
+            const lastEventsOfType={}
+            const noteChunks = chunks.filter(c=>c.type=="notes")
+            if (noteChunks.length > 0){
+                const lastNoteChunk=noteChunks[noteChunks.length-1];
+                for (ev of lastNoteChunk.data.events)
+                    lastEventsOfType[ev.name] = JSON.parse(JSON.stringify(ev))
+            }
+
             beat=0;
             if (currentChunk.notes.length == 0)
             {
@@ -1468,6 +1475,8 @@ async function main(){
                     currentChunk.events.push({...eot,pos:0})
             }
 
+            currentChunk.notes.sort((a,b)=>a.pos-b.pos)
+            currentChunk.events.sort((a,b)=>a.pos-b.pos)
             chunks.push({"type":"notes",data:currentChunk});
             currentChunk={notes:[],events:[]}
         }
@@ -1492,7 +1501,6 @@ async function main(){
                     commitChunk();
                 } else {
                     currentChunk.events.push(event);
-                    lastEventsOfType[event.name] = JSON.parse(JSON.stringify(event))
                 }
             }
             lastNote=note;
