@@ -12,6 +12,9 @@ def formatMrkCommand(commandCode):
 def command_setVoicePitch(pitchSetting):
     return formatCommandP(1, pitchSetting)
 
+def command_setVoiceQuality(qualitySetting):
+    return formatCommandP(5, qualitySetting)
+
 def command_setSingPitch(offset,pitchInHz): # the format is mrk=XXYYYYY; X = offset, y=pitch
     if offset < 0 or offset > 99:
         raise ValueError("Offset must be between 0 and 99")

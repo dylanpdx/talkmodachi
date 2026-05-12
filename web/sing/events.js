@@ -113,6 +113,30 @@ const events = {
             return `Phonetic Input: ${e.vars.state == 0 ? "Off" : "On"}`;
         },
         i:4,
+    },
+    "voice": {
+        "name": "Voice",
+        "vars": {
+            "vpitch": {
+                "name": "Pitch",
+                "type": "range",
+                "min": 0,
+                "max": 100,
+                "default": 49,
+            },
+            "vquality": {
+                "name": "Quality",
+                "type": "range",
+                "min": 0,
+                "max": 100,
+                "default": 50,
+            },
+        },
+        "color":0x00ff84,
+        "ts": function(e) {
+            return `Voice: Pitch ${e.vars.vpitch}, Quality ${e.vars.vquality}`;
+        },
+        i:5,
     }
 }
 
