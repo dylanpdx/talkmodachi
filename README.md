@@ -1,4 +1,4 @@
-# Talkmodachi
+# Talkmodachi TTS
 Make Tomodachi Life's TTS say whatever you want!
 
 This website uses a patched version of Tomodachi Life and a custom build of Citra to make Miis say whatever you want! Try it out at https://talkmodachi.dylanpdx.io/
