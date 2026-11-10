@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from io import BytesIO
 import citra,utils
 from flask_cors import CORS
@@ -11,7 +11,7 @@ if __name__ != '__main__':
 
 import tts
 
-app = Flask(__name__)
+app = Flask(__name__,static_folder="web/",static_url_path="")
 CORS(app)
 
 def langToId(lang):
@@ -175,6 +175,10 @@ def text_to_speech():
         return ttsMiitomo(text,data['lang'],pitch,speed,quality,tone,accent,intonation)
     else:
         return jsonify({'error': 'unknown engine'}), 400
+
+@app.route('/sing/', methods=['GET'])
+def sing_web():
+    return send_from_directory("web/sing",'index.html')
 
 if __name__ == '__main__':
     # Run the Flask app

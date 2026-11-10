@@ -32,6 +32,6 @@ The 3dstool commands for that are:
 ```
 
 You should now have a US_patched.cxi file. Move that to the main folder (where docker-compose.yml is) and then open this directory in the terminal.
-Run `docker compose up` and wait until it finishes doing it's thing. 
+Run `docker compose up` and wait until it finishes doing it's thing.
 
-TODO: Web hosting
+For a basic hosting setup, this should be enough, and the API and UI should be accessible at http://localhost

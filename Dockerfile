@@ -53,6 +53,8 @@ RUN apk update && apk add --no-cache \
 
 COPY ./api/*.py /app
 
+COPY web/ /app/web/
+
 COPY --from=builder /src/build/bin/Release /usr/local/bin
 
 RUN mkdir /config
