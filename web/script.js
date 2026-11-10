@@ -10,8 +10,32 @@ const manageVoicesList = document.getElementById('manageVoicesList');
 const manageVoicesDialog = document.getElementById('manageVoicesDialog');
 const manageVoicesBtn = document.getElementById('manageVoicesBtn');
 const voiceLanguageSelect = document.getElementById('languageSelect');
+const voiceEngineSelect = document.getElementById('voiceengine');
 const otherSitesBtn = document.getElementById('otherSitesBtn');
 const otherSitesDialog = document.getElementById('otherSitesDialog');
+
+const supportedLangs={ // must be kept in sync with the python ver
+    "tl":['useng', 'eueng', 'es', 'de', 'fr', 'it', 'kr'],
+    "tc":["jp"],
+    "mt":['useng', 'eueng', 'es', 'de', 'fr', 'it', 'kr', 'cafr', 'mxes', 'nl', 'ru', 'pt', 'ptbr'],
+    "ltd":[]
+}
+
+
+function syncLangEngine(changed) {
+	const lang = voiceLanguageSelect.value;
+	const eng = voiceEngineSelect.value;
+	if ((supportedLangs[eng] || []).includes(lang)) return;
+	if (changed === 'engine') {
+		const langs = supportedLangs[eng] || [];
+		if (langs.length) voiceLanguageSelect.value = langs[0];
+	} else {
+		const match = Object.keys(supportedLangs).find(e => supportedLangs[e].includes(lang));
+		if (match) voiceEngineSelect.value = match;
+	}
+}
+voiceLanguageSelect.addEventListener('change', () => syncLangEngine('lang'));
+voiceEngineSelect.addEventListener('change', () => syncLangEngine('engine'));
 
 // Initialize things for the VM
 /*var Module = typeof Module !== 'undefined' ? Module : {};
@@ -155,7 +179,8 @@ function getVoiceParameters() {
 		tone: parseFloat(sliders.tone.value),
 		accent: parseFloat(sliders.accent.value),
 		intonation: document.querySelector('input[type=radio][name=intonation]:checked').value,
-		lang: voiceLanguageSelect.value
+		lang: voiceLanguageSelect.value,
+		eng:voiceEngineSelect.value
 	};
 }
 
@@ -255,8 +280,10 @@ function loadVoiceParameters(voice) {
 		}
 	}
 	// Set language
-	if (voice.lang)
+	if (voice.lang) {
 		voiceLanguageSelect.value = voice.lang;
+		syncLangEngine('lang');
+	}
 }
 
 // check for voice in URL

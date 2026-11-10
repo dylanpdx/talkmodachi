@@ -4,6 +4,7 @@ import citra,utils
 from flask_cors import CORS
 import newSongConverter
 import pykakasi
+from miitomo import ttsMiitomo
 
 if __name__ != '__main__':
     citra.CITRA_PORT = utils.findFreePort()
@@ -32,6 +33,8 @@ def langToId(lang):
 def sing():
     # get body
     data = request.get_json()
+
+    
     if not data or 'notes' not in data or data['notes'] is None:
         return jsonify({'error': 'Missing notes parameter'}), 400 # todo update this
     
@@ -41,98 +44,26 @@ def sing():
     tone = int(request.args.get('tone', 50))
     accent = int(request.args.get('accent', 50))
     intonation = int(request.args.get('intonation', 1))
+    intonation = intonation - 1 # convert to 0-based index
+    engine = request.args.get('eng', 'tl')
     lang=data.get('lang','useng')
+
+    if (lang == "jp"):
+        return jsonify({'error': 'Unsupported language/engine combo'}), 400
+
+    if engine != "tl":
+        return jsonify({'error': 'not supported yet'}), 400
+    
     data = newSongConverter.convertSongToTTS(data)
 
-    try:
-        langId = langToId(lang)
-        if __name__ != '__main__':
-            match lang:
-                case 'useng':
-                    romName = 'US'
-                #case 'jp':
-                #    romName = "JP"
-                case 'kr':
-                    romName = "KR"
-                case _:
-                    romName = "EU"
-            
-            tts.startEmulator(romName,langId)
+    if engine == "tl":
+        return ttsCitra(data,lang,pitch,speed,quality,tone,accent,intonation)
+    return jsonify({'error': 'not supported yet'}), 400
 
-        audio_data = tts.generateText(data, pitch, speed, quality, tone, accent, intonation,language=langId)
-        audio_buffer = BytesIO(audio_data)
-        audio_buffer.seek(0)
-        
-        # Return the audio file
-        return send_file(
-            audio_buffer,
-            mimetype='audio/wav',
-            as_attachment=True,
-            download_name='speech.wav'
-        )
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return "error",500
-    finally:
-        if __name__ != '__main__':
-            tts.killEmulator()
-
-@app.route('/tts', methods=['GET','POST'])
-def text_to_speech():
-
-    if request.method == 'POST':
-        return sing() # Bypass default TTS and use sing function
-
-    data = {
-        'text': request.args.get('text', None),
-        'pitch': request.args.get('pitch', 50),
-        'speed': request.args.get('speed', 50),
-        'quality': request.args.get('quality', 50),
-        'tone': request.args.get('tone', 50),
-        'accent': request.args.get('accent', 50),
-        'intonation': request.args.get('intonation', 1),
-        'lang': request.args.get('lang', 'useng')  # Default to US English
-    }
-
-    limit = 2000
-    if data['lang'] == "jp":
-        limit = 1024 # technical limitation of the engine?
-    
-    if not data or 'text' not in data or data['text'] is None:
-        return jsonify({'error': 'Missing text parameter'}), 400
-    
-    if data['lang'] == "jp":
-        k = pykakasi.kakasi()
-        converted = k.convert(data['text'])
-        data['text'] = ""
-        for result in converted:
-            data['text']+=result["kana"]
-
-    if len(data['text']) > limit:
-        return jsonify({'error': 'Text too long'}), 400
-    text = data['text'].replace('\n', '')
-    
-    # Extract voice parameters (with defaults if not provided)
-    pitch = int(data.get('pitch', 50))
-    speed = int(data.get('speed', 50))
-    quality = int(data.get('quality', 50))
-    tone = int(data.get('tone', 50))
-    accent = int(data.get('accent', 50))
-    intonation = int(data.get('intonation', 1))
-    
-    # Validate
-    if not (0 <= pitch <= 100 and 0 <= speed <= 100 and 0 <= quality <= 100 and 
-            0 <= tone <= 100 and 0 <= accent <= 100 and intonation in [1, 2, 3, 4]):
-        return jsonify({'error': 'Invalid parameter values'}), 400
-    intonation = intonation - 1 # convert to 0-based index
-
-    if data['lang'] not in ['useng', 'eueng', 'es', 'de', 'fr', 'it', 'jp', 'kr']:
-        return jsonify({'error': 'Invalid language specified'}), 400
-
+def ttsCitra(text,lang,pitch,speed,quality,tone,accent,intonation):
     formatted_text = text
-    langId = langToId(data['lang'])
-    match data['lang']:
+    langId = langToId(lang)
+    match lang:
         case 'useng':
             romName = 'US'
         case 'jp':
@@ -141,12 +72,12 @@ def text_to_speech():
             romName = "KR"
         case _:
             romName = "EU"
-    if __name__ != '__main__':
-        tts.startEmulator(romName, langId)
-    else:
-        tts.setRom(romName)
-        tts.waitForStatus(1,setLanguage=langId)
     try:
+        if __name__ != '__main__':
+            tts.startEmulator(romName, langId)
+        else:
+            tts.setRom(romName)
+            tts.waitForStatus(1,setLanguage=langId)
         audio_data = None
         if "<lyric" not in text:
             # Generate audio from text using the tts module
@@ -177,6 +108,73 @@ def text_to_speech():
     finally:
         if __name__ != '__main__':
             tts.killEmulator()
+
+supportedLangs={
+    "tl":['useng', 'eueng', 'es', 'de', 'fr', 'it', 'kr'],
+    "tc":["jp"],
+    "mt":['useng', 'eueng', 'es', 'de', 'fr', 'it', 'kr', 'cafr', 'mxes', 'nl', 'ru', 'pt', 'ptbr'],
+    "ltd":[]
+}
+
+@app.route('/tts', methods=['GET','POST'])
+def text_to_speech():
+
+    if request.method == 'POST':
+        return sing() # Bypass default TTS and use sing function
+
+    data = {
+        'text': request.args.get('text', None),
+        'pitch': request.args.get('pitch', 50),
+        'speed': request.args.get('speed', 50),
+        'quality': request.args.get('quality', 50),
+        'tone': request.args.get('tone', 50),
+        'accent': request.args.get('accent', 50),
+        'intonation': request.args.get('intonation', 1),
+        'lang': request.args.get('lang', 'useng'),  # Default to US English
+        'eng': request.args.get('eng', 'tl') # tl, tc, mt, ltd
+    }
+
+    if (data['lang'] not in supportedLangs.get(data['eng'], [])):
+        return jsonify({'error': 'Unsupported language/engine combo'}), 400
+
+    limit = 2000
+    if data['lang'] == "jp" and data['eng'] == "tc":
+        limit = 1024 # technical limitation of the engine?
+    
+    if not data or 'text' not in data or data['text'] is None:
+        return jsonify({'error': 'Missing text parameter'}), 400
+    
+    if data['lang'] == "jp" and data['eng'] == "tc":
+        k = pykakasi.kakasi()
+        converted = k.convert(data['text'])
+        data['text'] = ""
+        for result in converted:
+            data['text']+=result["kana"]
+
+    if len(data['text']) > limit:
+        return jsonify({'error': 'Text too long'}), 400
+    text = data['text'].replace('\n', '')
+    
+    # Extract voice parameters (with defaults if not provided)
+    pitch = int(data.get('pitch', 50))
+    speed = int(data.get('speed', 50))
+    quality = int(data.get('quality', 50))
+    tone = int(data.get('tone', 50))
+    accent = int(data.get('accent', 50))
+    intonation = int(data.get('intonation', 1))
+    
+    # Validate
+    if not (0 <= pitch <= 100 and 0 <= speed <= 100 and 0 <= quality <= 100 and 
+            0 <= tone <= 100 and 0 <= accent <= 100 and intonation in [1, 2, 3, 4]):
+        return jsonify({'error': 'Invalid parameter values'}), 400
+    intonation = intonation - 1 # convert to 0-based index
+
+    if data['eng'] in ["tl","tc"]:
+        return ttsCitra(text,data['lang'],pitch,speed,quality,tone,accent,intonation)
+    elif data['eng'] == "mt":
+        return ttsMiitomo(text,data['lang'],pitch,speed,quality,tone,accent,intonation)
+    else:
+        return jsonify({'error': 'unknown engine'}), 400
 
 if __name__ == '__main__':
     # Run the Flask app
