@@ -3,7 +3,7 @@ version: '3.8'
 services:
   api:
     build:
-      context: ./api
+      context: .
     ports:
       - "80:5000"
     restart: "unless-stopped"
@@ -12,3 +12,5 @@ services:
       - ./EU_patched.cxi:/opt/EU.cxi
       - ./KR_patched.cxi:/opt/KR.cxi
       - ./JP_patched.cxi:/opt/JP.cxi
+      - ./com.nintendo.zaaa_2.4.0.apk:/app/com.nintendo.zaaa_2.4.0.apk
+      - ./ttsfs:/app/ttsfs

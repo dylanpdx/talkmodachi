@@ -4,3 +4,7 @@ node_modules
 *.exe
 gamePatch/source/main.hks
 newcodeinfo.h
+.idea/
+ttsfs/
+*.jar
+*.apk

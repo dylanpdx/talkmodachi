@@ -100,6 +100,7 @@
                         <label class="pill">Voice</label>
                         <div id="voicetype">
                             <select id="languageSelect">
+                                <option value="" disabled>- Tomodachi Life / Miitomo -</option>
                                 <option value="useng">🇺🇸 US English</option>
                                 <option value="eueng">🇪🇺 EU English</option>
                                 <option value="es">🇪🇸 Spanish</option>
@@ -107,7 +108,16 @@
                                 <option value="fr">🇫🇷 French</option>
                                 <option value="it">🇮🇹 Italian</option>
                                 <option value="kr">🇰🇷 Korean</option>
-                                <option value="jp">🇯🇵 Japanese (TC)</option>
+                                <option value="" disabled>- Tomodachi Collection -</option>
+                                <option value="jp">🇯🇵 Japanese</option>
+                                <option value="" disabled>- Miitomo -</option>
+                                <option value="cafr">🇨🇦 French (Canada)</option>
+                                <option value="mxes">🇲🇽 Spanish (Mexico)</option>
+                                <option value="nl">🇳🇱 Dutch</option>
+                                <option value="ru">🇷🇺 Russian</option>
+                                <option value="pt">🇵🇹 Portuguese</option>
+                                <option value="ptbr">🇧🇷 Portuguese (Brazil)</option>
+                                <option value="" disabled>- Living The Dream -</option>
                             </select>
                         </div>
                     </label>
@@ -124,6 +134,15 @@
                         </select>
                     </label>
                 </div>
+                <label for="voiceengine" class="control">
+                        <label class="pill">Voice Engine</label>
+                        <select id="voiceengine">
+                            <option value="tl" selected>Tomodachi Life</option>
+                            <option value="tc">Tomodachi Collection</option>
+                            <option value="mt">Miitomo</option>
+                            <option value="ltd" disabled>TL: Living the dream</option>
+                        </select>
+                </label>
                 <div class="buttonContainer">
                     <button class="yellow" id="manageVoicesBtn" onclick="toggleManageVoices();">Manage Presets</button>
                     <button class="yellow" id="manageVoicesBtn" onclick="savePreset();">Save new Preset</button>
@@ -176,7 +195,7 @@
     <script src="simple-ver3storedata-studio-from-c.js?v=20260124"></script>
     <script src="bytebuffer.min.js?v=20260124"></script>
     <script src="manageVoices.js?v=20260408"></script>
-    <script src="script.js?v=20260426"></script>
+    <script src="script.js?v=20261110"></script>
     <script src="savefile.js?v=20260124"></script>
     <!--
     <script src="/assets/load.js"></script>

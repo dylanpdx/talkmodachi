@@ -27,50 +27,15 @@ RUN mkdir build && \
 
 ########## Serverless Target (Lambda) ##########
 
-FROM python:3.10.16-alpine3.21 AS lambda_build
+FROM gradle:jdk17 AS miitomo_build
 RUN mkdir /app
 WORKDIR /app
 
-RUN apk update && apk add --no-cache \
-    build-base \
-    cmake \
-    autoconf \
-    automake \
-    libtool \
-    clang \
-    clang-extra-tools \
-    elfutils-dev
+COPY talkmodachi-miitomo/ /app/talkmodachi-miitomo/
 
-RUN pip3 install awslambdaric --target /app
+WORKDIR /app/talkmodachi-miitomo
 
-FROM python:3.10.16-alpine3.21 AS lambda
-
-#debug
-#RUN apk add --no-cache curl && mkdir -p /.aws-lambda && curl -Lo /.aws-lambda/aws-lambda-rie https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie && chmod +x /.aws-lambda/aws-lambda-rie
-
-RUN mkdir /app
-WORKDIR /app
-
-COPY --from=lambda_build /app /app
-
-COPY requirements.txt /app
-RUN pip3 install -r requirements.txt --break-system-packages 
-
-RUN apk update && apk add --no-cache \
-    libstdc++ \
-    ffmpeg \
-    curl
-
-COPY *.py /app
-
-COPY --from=builder /src/build/bin/Release /usr/local/bin
-
-RUN mkdir /config
-COPY sdl2-config.ini /config/sdl2-config.ini
-
-# Set runtime interface client as default command for the container runtime
-ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
-CMD [ "lambda.handler" ]
+RUN gradle shadowJar
 
 ########## API ##########
 
@@ -79,19 +44,23 @@ FROM python:3.10.16-alpine3.21
 RUN mkdir /app
 WORKDIR /app
 
-COPY requirements.txt /app
+COPY ./api/requirements.txt /app
 
 RUN pip3 install -r requirements.txt --break-system-packages && pip3 install gunicorn --break-system-packages
 
 RUN apk update && apk add --no-cache \
-    libstdc++
+    libstdc++ openjdk17
 
-COPY *.py /app
+COPY ./api/*.py /app
 
 COPY --from=builder /src/build/bin/Release /usr/local/bin
 
 RUN mkdir /config
-COPY sdl2-config.ini /config/sdl2-config.ini
+COPY ./api/sdl2-config.ini /config/sdl2-config.ini
+
+# Miitomo
+COPY --from=miitomo_build /app/talkmodachi-miitomo/build/libs/talkmodachi-miitomo-1.0-SNAPSHOT-all.jar talkmodachi-miitomo.jar
+
 
 ENTRYPOINT ["gunicorn", "-b","0.0.0.0:5000","-w","32","main:app", "--access-logfile","-","--error-logfile","-"]
 #ENTRYPOINT [ "sh" ]
